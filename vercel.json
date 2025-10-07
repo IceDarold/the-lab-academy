@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api",
+      "destination": "https://api.the-lab-academy.com/api"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "https://api.the-lab-academy.com/api/$1"
+    }
+  ]
+}

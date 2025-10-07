@@ -13,8 +13,8 @@ interface ApiConfig {
   readonly retry: RetryConfig;
 }
 
-const DEFAULT_DEV_API_URL = 'http://localhost:8000/api';
-const DEFAULT_PROD_API_URL = 'https://api.the-lab-academy.com/api';
+const DEFAULT_DEV_API_URL = '/api';
+const DEFAULT_PROD_API_URL = '/api';
 
 const getEnv = (key: string): string | undefined => {
   // Vite replaces import.meta.env during build, so we can safely read it directly.
