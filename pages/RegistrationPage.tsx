@@ -25,7 +25,12 @@ const RegistrationPage = () => {
     resolver: zodResolver(RegisterSchema),
   });
 
+  React.useEffect(() => {
+    console.log('Form errors:', errors);
+  }, [errors]);
+
   const onSubmit = async (data: RegisterData) => {
+    console.log('Form submitted with data:', data);
     if (emailExistsError) {
       return;
     }
@@ -37,6 +42,7 @@ const RegistrationPage = () => {
       }
       // For authenticated, redirect is handled in AuthContext
     } catch (err) {
+      console.log('Registration error:', err);
       setApiError((err as Error).message);
     }
   };
@@ -46,6 +52,7 @@ const RegistrationPage = () => {
     if (email) {
       // First check if email format is valid using the same regex as schema
       const isValidFormat = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+      console.log('Email blur:', email, 'isValidFormat:', isValidFormat);
 
       if (isValidFormat) {
         try {

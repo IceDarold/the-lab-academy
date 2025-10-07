@@ -78,6 +78,19 @@ describe('Auth Validators', () => {
       expect(result.data).toEqual(validData)
     })
 
+    it('should validate email with subdomain like akonukhov@isl.cy', () => {
+      const validData = {
+        fullName: 'John Doe',
+        email: 'akonukhov@isl.cy',
+        password: 'password123',
+        terms: true,
+      }
+
+      const result = RegisterSchema.safeParse(validData)
+      expect(result.success).toBe(true)
+      expect(result.data.email).toBe('akonukhov@isl.cy')
+    })
+
     it('should reject name shorter than 2 characters', () => {
       const invalidData = {
         fullName: 'J',
