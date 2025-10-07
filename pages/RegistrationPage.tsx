@@ -25,6 +25,8 @@ const RegistrationPage = () => {
     resolver: zodResolver(RegisterSchema),
   });
 
+  const { onChange: emailOnChange, ...emailRest } = register('email');
+
   React.useEffect(() => {
     console.log('Form errors:', errors);
   }, [errors]);
@@ -109,9 +111,12 @@ const RegistrationPage = () => {
                         type="email"
                         autoComplete="email"
                         placeholder="you@example.com"
-                        {...register('email')}
+                        {...emailRest}
                         onBlur={handleEmailBlur}
-                        onChange={handleEmailChange}
+                        onChange={(e) => {
+                          emailOnChange(e);
+                          handleEmailChange(e);
+                        }}
                         // FIX: Cast message to string to resolve TypeScript type mismatch from react-hook-form.
                         error={errors.email?.message as string || emailExistsError}
                         disabled={isSubmitting}
