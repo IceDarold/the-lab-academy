@@ -10,6 +10,7 @@ import { LoginSchema, LoginData } from '../lib/validators/auth';
 
 const LoginPage = () => {
   const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const { login } = useAuth();
 
@@ -66,16 +67,32 @@ const LoginPage = () => {
                     <Input
                         id="password"
                         label="Password"
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         autoComplete="current-password"
                         placeholder="password"
                         {...register('password')}
                         // FIX: Cast message to string to resolve TypeScript type mismatch from react-hook-form.
                         error={errors.password?.message as string}
                         disabled={isSubmitting}
-                    />
+                                        />
 
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                        <input
+                            id="show-password"
+                            name="show-password"
+                            type="checkbox"
+                            checked={showPassword}
+                            onChange={(e) => setShowPassword(e.target.checked)}
+                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                            disabled={isSubmitting}
+                        />
+                        <label htmlFor="show-password" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
+                            Show password
+                        </label>
+                    </div>
+
+                    <div className="flex items-center justify-between"></search>
+</search_and_replace>
                         <div className="flex items-center">
                             <input
                                 id="remember-me"
