@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api",
-      "destination": "https://api.the-lab-academy.com/api"
+      "destination": "@api"
     },
     {
       "source": "/api/(.*)",
-      "destination": "https://api.the-lab-academy.com/api/$1"
+      "destination": "@api/$1"
     }
   ]
 }

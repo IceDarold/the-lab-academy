@@ -18,6 +18,7 @@ interface RefreshResponse {
   refreshToken?: string;
   expiresIn?: number;
   expiresAt?: number;
+  tokenType?: string;
 }
 
 const api = axios.create({
@@ -75,7 +76,16 @@ const shouldSkip401Handling = (config?: RetriableRequestConfig): boolean => {
   }
 
   const normalizedUrl = config.url.replace(apiConfig.baseURL, '');
-  return ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout'].some((endpoint) =>
+  return [
+    '/auth/login',
+    '/auth/register',
+    '/auth/refresh',
+    '/auth/logout',
+    '/v1/auth/login',
+    '/v1/auth/register',
+    '/v1/auth/refresh',
+    '/v1/auth/logout',
+  ].some((endpoint) =>
     normalizedUrl.includes(endpoint)
   );
 };
@@ -92,8 +102,15 @@ const getExpiresAt = (data: RefreshResponse): number | undefined => {
   return undefined;
 };
 
-const resolveAuthorizationHeader = (token?: string | null) =>
-  token ? `Bearer ${token}` : undefined;
+const resolveAuthorizationHeader = (token?: string | null, tokenType?: string | null) => {
+  if (!token) {
+    return undefined;
+  }
+
+  const scheme = tokenType ?? 'bearer';
+  const normalizedScheme = `${scheme.charAt(0).toUpperCase()}${scheme.slice(1).toLowerCase()}`;
+  return `${normalizedScheme} ${token}`;
+};
 
 const refreshAccessToken = async (): Promise<string | null> => {
   if (!refreshPromise) {
@@ -108,7 +125,7 @@ const refreshAccessToken = async (): Promise<string | null> => {
           refreshToken: tokens.refreshToken,
         });
 
-        const { accessToken, refreshToken, expiresIn, expiresAt } = response.data;
+        const { accessToken, refreshToken, expiresIn, expiresAt, tokenType } = response.data;
         if (!accessToken) {
           throw new Error('Refresh payload missing accessToken');
         }
@@ -117,6 +134,7 @@ const refreshAccessToken = async (): Promise<string | null> => {
 
         storeTokens({
           accessToken,
+          tokenType: tokenType ?? tokens.tokenType ?? 'bearer',
           refreshToken: refreshToken ?? tokens.refreshToken,
           expiresAt: computedExpiresAt,
         });
@@ -125,6 +143,7 @@ const refreshAccessToken = async (): Promise<string | null> => {
           accessToken,
           refreshToken: refreshToken ?? tokens.refreshToken ?? null,
           expiresAt: computedExpiresAt,
+          tokenType: tokenType ?? tokens.tokenType ?? 'bearer',
         });
 
         return accessToken;
@@ -158,7 +177,10 @@ api.interceptors.request.use((config) => {
 
   const tokens = getStoredTokens();
   if (tokens?.accessToken && !requestConfig.headers.Authorization) {
-    requestConfig.headers.Authorization = resolveAuthorizationHeader(tokens.accessToken);
+    requestConfig.headers.Authorization = resolveAuthorizationHeader(
+      tokens.accessToken,
+      tokens.tokenType ?? undefined
+    );
   }
 
   return requestConfig;
@@ -191,7 +213,11 @@ api.interceptors.response.use(
         }
 
         config.headers = config.headers ?? {};
-        config.headers.Authorization = resolveAuthorizationHeader(newAccessToken);
+        const tokens = getStoredTokens();
+        config.headers.Authorization = resolveAuthorizationHeader(
+          newAccessToken,
+          tokens?.tokenType ?? undefined
+        );
 
         return api(config);
       } catch (refreshError) {

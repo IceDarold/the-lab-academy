@@ -52,6 +52,7 @@ const CellRenderer: React.FC<CellRendererProps> = ({ cell, pyodideState, onExecu
       return (
         <div id={cell.id} className="not-prose my-12">
             <QuizComponent
+                questionId={cell.questionId}
                 question={cell.question}
                 answers={cell.answers}
                 explanation={cell.explanation}

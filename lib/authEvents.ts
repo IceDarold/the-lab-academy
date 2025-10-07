@@ -13,6 +13,7 @@ export interface TokenRefreshedDetail {
   accessToken: string;
   refreshToken?: string | null;
   expiresAt?: number;
+  tokenType?: string | null;
 }
 
 const isBrowser = () => typeof window !== 'undefined' && typeof window.dispatchEvent === 'function';

@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import Editor from 'react-simple-code-editor';
 import Button from '../components/Button';
 import { getLessonBySlug, getRawLessonBySlug, updateRawLessonBySlug } from '../services/lessons.service';
-import { completeLesson, getLessonNavigation } from '../services/courses.service';
+import { completeLesson, getCourseDetails } from '../services/courses.service';
 import { Lesson, TextCell } from '../types/lessons';
 import LessonPageSkeleton from '../components/LessonPageSkeleton';
 import Card from '../components/Card';
@@ -40,6 +40,63 @@ const LessonPage = () => {
   // --- Pyodide State Management ---
   const pyodideRef = useRef<any>(null);
   const [pyodideState, setPyodideState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+
+  const resolveCourseSlug = (lessonData: Lesson): string | null => {
+    if (lessonData.courseSlug) {
+      return lessonData.courseSlug;
+    }
+
+    const breadcrumbWithSlug = lessonData.breadcrumbs.find((crumb) => crumb.href.includes('slug='));
+    if (!breadcrumbWithSlug) {
+      return null;
+    }
+
+    const queryStart = breadcrumbWithSlug.href.indexOf('?');
+    if (queryStart === -1) {
+      return null;
+    }
+
+    const params = new URLSearchParams(breadcrumbWithSlug.href.substring(queryStart));
+    return params.get('slug');
+  };
+
+  const buildNavigation = async (lessonData: Lesson) => {
+    const courseSlug = resolveCourseSlug(lessonData);
+    if (!courseSlug) {
+      setNavigation({ previous: null, next: null });
+      return;
+    }
+
+    try {
+      const courseDetails = await getCourseDetails(courseSlug);
+      const orderedLessons = [...courseDetails.modules]
+        .sort((a, b) => a.order - b.order)
+        .flatMap((module) =>
+          [...module.lessons].sort((a, b) => {
+            const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+            const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+            if (orderA !== orderB) {
+              return orderA - orderB;
+            }
+            const titleA = a.title ?? '';
+            const titleB = b.title ?? '';
+            return titleA.localeCompare(titleB);
+          })
+        );
+
+      const currentIndex = orderedLessons.findIndex((item) => item.slug === lessonData.slug);
+      setNavigation({
+        previous: currentIndex > 0 ? orderedLessons[currentIndex - 1].slug : null,
+        next:
+          currentIndex !== -1 && currentIndex < orderedLessons.length - 1
+            ? orderedLessons[currentIndex + 1].slug
+            : null,
+      });
+    } catch (navError) {
+      console.error('Failed to derive lesson navigation', navError);
+      setNavigation({ previous: null, next: null });
+    }
+  };
 
   // Effect to initialize Pyodide once per lesson page load
   useEffect(() => {
@@ -97,17 +154,15 @@ const LessonPage = () => {
       setError(null);
       setNavigation({ previous: null, next: null });
 
-      const [lessonData, navData] = await Promise.all([
-        getLessonBySlug(slug),
-        getLessonNavigation(slug)
-      ]);
-      
+      const lessonData = await getLessonBySlug(slug);
+
       setLesson(lessonData);
-      setNavigation({ previous: navData.previousLessonSlug, next: navData.nextLessonSlug });
 
       if (lessonData.cells.length > 0) {
         setActiveSection(lessonData.cells[0].id);
       }
+
+      await buildNavigation(lessonData);
     } catch (err) {
       setError((err as Error).message);
       console.error(err);
@@ -183,24 +238,34 @@ const LessonPage = () => {
 
     setIsCompleting(true);
     try {
-        const courseBreadcrumb = lesson.breadcrumbs[0];
-        if (!courseBreadcrumb) throw new Error("Course context not found");
-        
-        const courseSlug = new URLSearchParams(courseBreadcrumb.href.substring(courseBreadcrumb.href.indexOf('?'))).get('slug');
-        if (!courseSlug) throw new Error("Could not parse course slug.");
+      const lessonIdentifier = lesson.lessonId ?? lesson.id;
+      if (!lessonIdentifier) {
+        throw new Error('Cannot determine lesson identifier for completion.');
+      }
 
-        await completeLesson(lesson.slug);
-        
-        if (navigation.next) {
-            window.location.hash = `#/lesson?slug=${navigation.next}`;
-        } else {
-            window.location.hash = `#/dashboard/course?slug=${courseSlug}&completed=true`;
-        }
+      const updatedProgress = await completeLesson(lessonIdentifier);
+
+      const courseSlug = resolveCourseSlug(lesson);
+      if (!courseSlug) {
+        throw new Error('Course context not found.');
+      }
+
+      if (typeof updatedProgress === 'number') {
+        toast.success(`Course progress: ${Math.round(updatedProgress)}%`);
+      } else {
+        toast.success('Lesson marked as complete.');
+      }
+
+      if (navigation.next) {
+        window.location.hash = `#/lesson?slug=${navigation.next}`;
+      } else {
+        window.location.hash = `#/dashboard/course?slug=${courseSlug}&completed=true`;
+      }
     } catch (err) {
-        console.error("Failed to complete lesson:", err);
-        toast.error('Could not complete lesson. Please try again.');
+      console.error('Failed to complete lesson:', err);
+      toast.error('Could not complete lesson. Please try again.');
     } finally {
-        setIsCompleting(false);
+      setIsCompleting(false);
     }
   };
 

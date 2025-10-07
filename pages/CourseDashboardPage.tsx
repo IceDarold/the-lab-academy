@@ -3,7 +3,7 @@ import Card from '../components/Card';
 import ProgressBar from '../components/ProgressBar';
 import Accordion from '../components/Accordion';
 import Button from '../components/Button';
-import { Course } from '../types/courses';
+import { CourseDetails, CourseModuleSummary, CourseLessonSummary, CourseProgressStatus } from '../types/courses';
 import { getCourseDetails } from '../services/courses.service';
 import CourseDashboardSkeleton from '../components/CourseDashboardSkeleton';
 
@@ -28,11 +28,15 @@ const NotStartedIcon = () => (
 );
 
 
-const getStatusIcon = (status: 'completed' | 'in-progress' | 'not-started') => {
+const getStatusIcon = (status: CourseProgressStatus) => {
     switch (status) {
-        case 'completed': return <CheckCircleIcon />;
-        case 'in-progress': return <InProgressIcon />;
-        case 'not-started': return <NotStartedIcon />;
+        case 'completed':
+            return <CheckCircleIcon />;
+        case 'in-progress':
+            return <InProgressIcon />;
+        case 'not_started':
+        default:
+            return <NotStartedIcon />;
     }
 };
 
@@ -44,8 +48,16 @@ const getStatusBadgeClasses = (status: string) => {
     }
 };
 
+type ModuleWithProgress = CourseModuleSummary & {
+    lessons: CourseLessonSummary[];
+    completedLessons: number;
+    totalLessons: number;
+    progress: number;
+    statusLabel: 'Not Started' | 'In Progress' | 'Completed';
+};
+
 const CourseDashboardPage = () => {
-    const [course, setCourse] = useState<Course | null>(null);
+    const [course, setCourse] = useState<CourseDetails | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showCompletionBanner, setShowCompletionBanner] = useState(false);
@@ -115,6 +127,56 @@ const CourseDashboardPage = () => {
         return null;
     }
 
+    const sortedModules: CourseModuleSummary[] = [...course.modules].sort((a, b) => a.order - b.order);
+    const moduleSummaries: ModuleWithProgress[] = sortedModules.map((module) => {
+        const lessons = [...module.lessons].sort((a, b) => {
+            const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+            const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+            if (orderA !== orderB) {
+                return orderA - orderB;
+            }
+            const titleA = a.title ?? '';
+            const titleB = b.title ?? '';
+            return titleA.localeCompare(titleB);
+        });
+
+        const completedLessons = lessons.filter((lesson) => lesson.status === 'completed').length;
+        const totalLessons = lessons.length;
+        const progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+        const statusLabel =
+            totalLessons === 0
+                ? 'Not Started'
+                : completedLessons === totalLessons
+                ? 'Completed'
+                : completedLessons > 0
+                ? 'In Progress'
+                : 'Not Started';
+
+        return {
+            ...module,
+            lessons,
+            completedLessons,
+            totalLessons,
+            progress,
+            statusLabel,
+        };
+    });
+
+    const aggregatedStats = moduleSummaries.reduce(
+        (acc, module) => {
+            acc.partsTotal += 1;
+            if (module.statusLabel === 'Completed') {
+                acc.partsCompleted += 1;
+            }
+            acc.lessonsTotal += module.totalLessons;
+            acc.lessonsCompleted += module.completedLessons;
+            return acc;
+        },
+        { partsCompleted: 0, partsTotal: 0, lessonsCompleted: 0, lessonsTotal: 0 }
+    );
+
+    const overallProgress = course.overallProgressPercent;
+
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="space-y-12">
@@ -147,44 +209,42 @@ const CourseDashboardPage = () => {
                 </div>
 
                 {/* Overall Progress */}
-                {course.stats && (
-                    <Card>
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Your Course Progress</h2>
-                        <div className="mt-4 space-y-2">
-                            <div className="flex justify-between items-center mb-1">
-                                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Overall Progress</span>
-                                <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{course.progress}%</span>
-                            </div>
-                            <ProgressBar progress={course.progress} />
-                            <p className="text-sm text-gray-600 dark:text-gray-400 pt-2">
-                                Completed {course.stats.partsCompleted} of {course.stats.partsTotal} parts
-                                <span className="mx-2">|</span>
-                                {course.stats.lessonsCompleted} of {course.stats.lessonsTotal} lessons
-                            </p>
+                <Card>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Your Course Progress</h2>
+                    <div className="mt-4 space-y-2">
+                        <div className="flex justify-between items-center mb-1">
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Overall Progress</span>
+                            <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{overallProgress}%</span>
                         </div>
-                    </Card>
-                )}
+                        <ProgressBar progress={overallProgress} />
+                        <p className="text-sm text-gray-600 dark:text-gray-400 pt-2">
+                            Completed {aggregatedStats.partsCompleted} of {aggregatedStats.partsTotal} modules
+                            <span className="mx-2">|</span>
+                            {aggregatedStats.lessonsCompleted} of {aggregatedStats.lessonsTotal} lessons
+                        </p>
+                    </div>
+                </Card>
 
                 {/* Syllabus */}
-                {course.syllabus && (
+                {moduleSummaries.length > 0 && (
                     <section>
                         <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">
                             Course Syllabus
                         </h2>
                         <Card className="p-0">
                             <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                            {course.syllabus.map((section) => (
+                            {moduleSummaries.map((section) => (
                                 <Accordion 
                                     key={section.title} 
-                                    defaultOpen={section.status === 'In Progress'}
+                                    defaultOpen={section.statusLabel === 'In Progress'}
                                     title={
                                         <div className="flex flex-col sm:flex-row sm:items-center w-full gap-4">
                                             <div className="flex-grow">
                                                 <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{section.title}</h3>
                                             </div>
                                             <div className="flex items-center gap-4 w-full sm:w-auto">
-                                                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${getStatusBadgeClasses(section.status)}`}>
-                                                    {section.status}
+                                                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${getStatusBadgeClasses(section.statusLabel)}`}>
+                                                    {section.statusLabel}
                                                 </span>
                                                 <div className="w-full sm:w-32">
                                                     <ProgressBar progress={section.progress} />
@@ -194,23 +254,26 @@ const CourseDashboardPage = () => {
                                     }
                                 >
                                     <ul className="space-y-1 py-2">
-                                        {section.lessons.map(lesson => (
-                                            <li key={lesson.slug}>
-                                                <a href={`#/lesson?slug=${lesson.slug}`} onClick={(e) => { e.preventDefault(); window.location.hash = `#/lesson?slug=${lesson.slug}`; }} className="flex items-center p-3 -mx-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/60 transition-colors duration-200 group">
-                                                    <div className="flex-shrink-0">
-                                                        {getStatusIcon(lesson.status)}
-                                                    </div>
-                                                    <div className="ml-4 flex-grow">
-                                                        <p className="font-semibold text-gray-800 dark:text-gray-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-                                                            Lesson {lesson.id}: {lesson.title}
-                                                        </p>
-                                                    </div>
-                                                    <div className="text-sm text-gray-500 dark:text-gray-400 ml-4 whitespace-nowrap">
-                                                        ~{lesson.duration}
-                                                    </div>
-                                                </a>
-                                            </li>
-                                        ))}
+                                        {section.lessons.map((lesson, index) => {
+                                            const lessonNumber =
+                                                typeof lesson.order === 'number'
+                                                    ? lesson.order
+                                                    : index + 1;
+                                            return (
+                                                <li key={lesson.slug || lesson.lessonId || `${section.title}-${index}`}>
+                                                    <a href={`#/lesson?slug=${lesson.slug}`} onClick={(e) => { e.preventDefault(); window.location.hash = `#/lesson?slug=${lesson.slug}`; }} className="flex items-center p-3 -mx-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/60 transition-colors duration-200 group">
+                                                        <div className="flex-shrink-0">
+                                                            {getStatusIcon(lesson.status)}
+                                                        </div>
+                                                        <div className="ml-4 flex-grow">
+                                                            <p className="font-semibold text-gray-800 dark:text-gray-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                                                                Lesson {lessonNumber}: {lesson.title}
+                                                            </p>
+                                                        </div>
+                                                    </a>
+                                                </li>
+                                            );
+                                        })}
                                     </ul>
                                 </Accordion>
                             ))}

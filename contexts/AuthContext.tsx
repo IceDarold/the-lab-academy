@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { User, AuthContextType, AuthResponse } from '../types/auth';
+import { User, AuthContextType, AuthTokens } from '../types/auth';
 import FullScreenLoader from '../components/FullScreenLoader';
 import {
   login as loginService,
@@ -27,7 +27,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (api.defaults.headers?.common) {
       if (tokens.accessToken) {
-        api.defaults.headers.common['Authorization'] = `Bearer ${tokens.accessToken}`;
+        const scheme = tokens.tokenType ?? 'bearer';
+        const normalizedScheme =
+          typeof scheme === 'string' && scheme.trim().length > 0
+            ? `${scheme[0].toUpperCase()}${scheme.slice(1).toLowerCase()}`
+            : 'Bearer';
+        api.defaults.headers.common['Authorization'] = `${normalizedScheme} ${tokens.accessToken}`;
       } else {
         delete api.defaults.headers.common['Authorization'];
       }
@@ -61,6 +66,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       try {
+        applyTokensToStorage({
+          accessToken: tokens.accessToken,
+          tokenType: tokens.tokenType ?? 'bearer',
+          refreshToken: tokens.refreshToken ?? undefined,
+          expiresAt: tokens.expiresAt ?? undefined,
+        });
         const currentUser = await getMe();
         setUser(currentUser);
       } catch (error) {
@@ -104,6 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       applyTokensToStorage({
         accessToken: detail.accessToken,
+        tokenType: detail.tokenType ?? 'bearer',
         refreshToken: detail.refreshToken ?? undefined,
         expiresAt: detail.expiresAt,
       });
@@ -115,29 +127,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [applyTokensToStorage]);
 
-  const persistAuthTokens = (auth: AuthResponse) => {
+  const persistAuthTokens = (tokens: AuthTokens) => {
     const expiresAt =
-      auth.expiresAt ?? (auth.expiresIn ? Date.now() + auth.expiresIn * 1000 : undefined);
+      tokens.expiresAt ?? (tokens.expiresIn ? Date.now() + tokens.expiresIn * 1000 : undefined);
 
     applyTokensToStorage({
-      accessToken: auth.accessToken,
-      refreshToken: auth.refreshToken,
+      accessToken: tokens.accessToken,
+      tokenType: tokens.tokenType,
+      refreshToken: tokens.refreshToken ?? undefined,
       expiresAt,
     });
   };
 
   const login = async (email: string, password: string) => {
     try {
-      const auth = await loginService(email, password);
-      persistAuthTokens(auth);
-      setUser(auth.user);
+      const tokens = await loginService(email, password);
+      persistAuthTokens(tokens);
+      const currentUser = await getMe();
+      setUser(currentUser);
       if (typeof window !== 'undefined') {
         window.location.hash = '#/dashboard';
       }
 
       dispatchAuthEvent(AUTH_EVENTS.TOKEN_REFRESHED, {
-        accessToken: auth.accessToken,
-        refreshToken: auth.refreshToken ?? null,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken ?? null,
+        tokenType: tokens.tokenType ?? 'bearer',
       });
     } catch (error) {
       console.error('AuthContext login error:', error);
@@ -147,25 +162,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    const tokens = getStoredTokens();
-
-    await logoutService(tokens?.refreshToken);
+    await logoutService();
     clearSession('#/');
     dispatchAuthEvent(AUTH_EVENTS.LOGOUT, { reason: 'manual' });
   };
 
   const register = async (fullName: string, email: string, password: string) => {
     try {
-      const auth = await registerService(fullName, email, password);
-      persistAuthTokens(auth);
-      setUser(auth.user);
+      const result = await registerService(fullName, email, password);
+
+      if (result.status === 'pending_confirmation') {
+        clearSession();
+        throw new Error(
+          'Registration successful. Please confirm your email address before signing in.'
+        );
+      }
+
+      persistAuthTokens(result.tokens);
+      const currentUser = await getMe();
+      setUser(currentUser);
       if (typeof window !== 'undefined') {
         window.location.hash = '#/dashboard';
       }
 
       dispatchAuthEvent(AUTH_EVENTS.TOKEN_REFRESHED, {
-        accessToken: auth.accessToken,
-        refreshToken: auth.refreshToken ?? null,
+        accessToken: result.tokens.accessToken,
+        refreshToken: result.tokens.refreshToken ?? null,
+        tokenType: result.tokens.tokenType ?? 'bearer',
       });
     } catch (error) {
       console.error('AuthContext register error:', error);

@@ -1,11 +1,13 @@
 export interface StoredTokens {
   accessToken: string;
+  tokenType?: string | null;
   refreshToken?: string | null;
   /** Epoch timestamp in milliseconds */
   expiresAt?: number | null;
 }
 
 const ACCESS_TOKEN_KEY = 'authToken';
+const TOKEN_TYPE_KEY = 'authTokenType';
 const REFRESH_TOKEN_KEY = 'authRefreshToken';
 const ACCESS_TOKEN_EXPIRY_KEY = 'authTokenExpiry';
 
@@ -45,12 +47,14 @@ export const getStoredTokens = (): StoredTokens | null => {
 
   const refreshToken = safeGet(REFRESH_TOKEN_KEY);
   const expiresAtRaw = safeGet(ACCESS_TOKEN_EXPIRY_KEY);
+  const tokenType = safeGet(TOKEN_TYPE_KEY);
   const parsedExpiresAt = expiresAtRaw ? Number(expiresAtRaw) : undefined;
   const expiresAt =
     typeof parsedExpiresAt === 'number' && Number.isFinite(parsedExpiresAt) ? parsedExpiresAt : undefined;
 
   return {
     accessToken,
+    tokenType: tokenType ?? undefined,
     refreshToken: refreshToken ?? undefined,
     expiresAt,
   };
@@ -58,6 +62,7 @@ export const getStoredTokens = (): StoredTokens | null => {
 
 export const storeTokens = (tokens: StoredTokens) => {
   safeSet(ACCESS_TOKEN_KEY, tokens.accessToken);
+  safeSet(TOKEN_TYPE_KEY, tokens.tokenType ?? null);
   safeSet(REFRESH_TOKEN_KEY, tokens.refreshToken ?? null);
 
   if (tokens.expiresAt && Number.isFinite(tokens.expiresAt)) {
@@ -69,6 +74,7 @@ export const storeTokens = (tokens: StoredTokens) => {
 
 export const clearStoredTokens = () => {
   safeSet(ACCESS_TOKEN_KEY, null);
+  safeSet(TOKEN_TYPE_KEY, null);
   safeSet(REFRESH_TOKEN_KEY, null);
   safeSet(ACCESS_TOKEN_EXPIRY_KEY, null);
 };

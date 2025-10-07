@@ -2,6 +2,7 @@ import React from 'react';
 import Card from './Card';
 import Button from './Button';
 import Accordion from './Accordion';
+import { PublicCourseDetails } from '../types/courses';
 
 // Heroicons
 const CheckIcon = () => (
@@ -33,21 +34,13 @@ const AcademicCapIcon = () => (
     </svg>
 );
 
-const CourseDetailView = () => {
-    const syllabus = [
-        {
-            part: "Part 1: Introduction to Machine Learning",
-            lessons: ["Welcome to the Course", "What is Machine Learning?", "Setting Up Your Environment", "Core Concepts and Terminology"]
-        },
-        {
-            part: "Part 2: Supervised Learning - Regression",
-            lessons: ["Linear Regression Theory", "Hands-On: Predicting Housing Prices", "Polynomial Regression", "Evaluating Regression Models"]
-        },
-        {
-            part: "Part 3: Supervised Learning - Classification",
-            lessons: ["Logistic Regression", "K-Nearest Neighbors (KNN)", "Support Vector Machines (SVM)", "Decision Trees and Random Forests"]
-        }
-    ];
+interface CourseDetailViewProps {
+    course?: PublicCourseDetails | null;
+    onEnroll?: (slug: string) => void;
+}
+
+const CourseDetailView: React.FC<CourseDetailViewProps> = ({ course, onEnroll }) => {
+    const syllabus = course?.modules ?? [];
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-12">
@@ -56,22 +49,21 @@ const CourseDetailView = () => {
                 {/* Header */}
                 <div>
                     <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
-                        Classical Machine Learning: From Data to Decision
+                        {course?.title ?? 'Course Overview'}
                     </h1>
-                    <div className="flex flex-wrap gap-2 mt-4">
-                        <span className="inline-block bg-indigo-100 text-indigo-800 text-sm font-semibold px-3 py-1 rounded-full dark:bg-indigo-900 dark:text-indigo-300">
-                            For Beginners
-                        </span>
-                        <span className="inline-block bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-full dark:bg-green-900 dark:text-green-300">
-                            Python
-                        </span>
-                    </div>
+                    <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
+                        {course?.description ?? 'Browse the syllabus and enroll to get started.'}
+                    </p>
                 </div>
 
                 {/* Description */}
                 <div className="text-lg text-gray-600 dark:text-gray-400 space-y-4">
-                    <p>This course provides a comprehensive introduction to the fundamental concepts and algorithms of classical machine learning. You will move from theoretical foundations to practical implementation, learning how to build predictive models that solve real-world problems.</p>
-                    <p>No prior machine learning experience is required. We start with the basics and progressively build up your skills, using Python and its popular libraries like Scikit-learn and Pandas. By the end, you will be able to preprocess data, train various models, and evaluate their performance effectively.</p>
+                    {!course && (
+                        <p>Loading course information…</p>
+                    )}
+                    {course && course.modules.length === 0 && (
+                        <p>Detailed syllabus is not available yet. Enroll to receive updates.</p>
+                    )}
                 </div>
                 
                 {/* What You'll Learn */}
@@ -100,17 +92,21 @@ const CourseDetailView = () => {
                 {/* Course Syllabus */}
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Course Syllabus</h2>
-                    <div className="space-y-2">
-                        {syllabus.map((item, index) => (
-                            <Accordion key={item.part} title={item.part} defaultOpen={index === 0}>
-                                <ul className="space-y-3 pl-4 list-disc list-inside">
-                                    {item.lessons.map(lesson => (
-                                        <li key={lesson}>{lesson}</li>
-                                    ))}
-                                </ul>
-                            </Accordion>
-                        ))}
-                    </div>
+                    {syllabus.length === 0 ? (
+                        <p className="text-gray-600 dark:text-gray-400">Syllabus will be available soon.</p>
+                    ) : (
+                        <div className="space-y-2">
+                            {syllabus.map((module, index) => (
+                                <Accordion key={module.title || index} title={module.title} defaultOpen={index === 0}>
+                                    <ul className="space-y-3 pl-4 list-disc list-inside">
+                                        {module.lessons.map((lesson) => (
+                                            <li key={lesson.title}>{lesson.title}</li>
+                                        ))}
+                                    </ul>
+                                </Accordion>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -119,13 +115,18 @@ const CourseDetailView = () => {
                 <div className="lg:sticky lg:top-8">
                     <Card className="p-0 overflow-hidden">
                         <img 
-                            src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=870&auto.format&fit=crop" 
+                            src={course?.coverImageUrl ?? 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=870&auto=format&fit=crop'} 
                             alt="Course preview"
                             className="w-full h-48 object-cover"
                         />
                         <div className="p-6">
-                            <Button variant="primary" className="w-full text-lg py-3" onClick={() => window.location.hash = '#/dashboard/course'}>
-                                Enroll in the course
+                            <Button
+                                variant="primary"
+                                className="w-full text-lg py-3"
+                                disabled={!course}
+                                onClick={() => course?.slug && onEnroll?.(course.slug)}
+                            >
+                                {course ? 'Enroll in the course' : 'Loading…'}
                             </Button>
                             <ul className="mt-6 space-y-4 text-sm text-gray-700 dark:text-gray-300">
                                 <li className="flex items-center space-x-3">
@@ -134,7 +135,7 @@ const CourseDetailView = () => {
                                 </li>
                                 <li className="flex items-center space-x-3">
                                     <ClockIcon />
-                                    <span><strong>Duration:</strong> ~20 hours</span>
+                                    <span><strong>Duration:</strong> Self-paced</span>
                                 </li>
                                 <li className="flex items-center space-x-3">
                                     <SparklesIcon />

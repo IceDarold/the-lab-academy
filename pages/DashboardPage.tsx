@@ -8,7 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Modal from '../components/Modal';
 import CourseDetailView from '../components/CourseDetailView';
 import { getMyCourses } from '../services/courses.service';
-import { Course } from '../types/courses';
+import { CourseSummary } from '../types/courses';
 import CourseCardSkeleton from '../components/CourseCardSkeleton';
 
 // Animation variants for card containers and individual items
@@ -62,7 +62,7 @@ const DashboardPage = () => {
   const { user } = useAuth();
   const username = user?.fullName?.split(' ')[0] || "User";
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [myCourses, setMyCourses] = useState<Course[]>([]);
+  const [myCourses, setMyCourses] = useState<CourseSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -144,7 +144,7 @@ const DashboardPage = () => {
                 myCourses.map((course) => (
                   <motion.a 
                     href={`#/dashboard/course?slug=${course.slug}`} 
-                    key={course.id} 
+                    key={course.courseId} 
                     onClick={(e) => { e.preventDefault(); window.location.hash = `#/dashboard/course?slug=${course.slug}`; }} 
                     className="block h-full"
                     variants={itemVariants}
@@ -152,8 +152,7 @@ const DashboardPage = () => {
                     <CourseCard
                       status={course.status}
                       courseName={course.title}
-                      tags={course.tags}
-                      progress={course.progress}
+                      progress={course.progressPercent}
                       imageUrl={course.coverImageUrl}
                     />
                   </motion.a>

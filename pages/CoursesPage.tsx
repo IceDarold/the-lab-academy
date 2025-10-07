@@ -1,61 +1,129 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import CourseCard from '../components/CourseCard';
 import Modal from '../components/Modal';
 import CourseDetailView from '../components/CourseDetailView';
-
-const coursesData = [
-  {
-    courseName: "Classic ML Algorithms",
-    tags: ['Beginner', 'Python'],
-    description: "Master the fundamentals of machine learning, from linear regression to support vector machines.",
-    imageUrl: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=870&auto=format&fit=crop"
-  },
-  {
-    courseName: "Deep Dive into Neural Networks",
-    tags: ['Intermediate', 'PyTorch'],
-    description: "Build and train your first neural networks for image classification and natural language processing.",
-    imageUrl: "https://images.unsplash.com/photo-1555431182-0c3e4383a1ec?q=80&w=870&auto=format&fit=crop"
-  },
-  {
-    courseName: "Data Wrangling with Pandas",
-    tags: ['Beginner', 'Data Science'],
-    description: "Learn the art of cleaning, transforming, and analyzing data with the powerful Pandas library.",
-    imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=870&auto=format&fit=crop"
-  },
-  {
-    courseName: "Advanced Computer Vision",
-    tags: ['Advanced', 'TensorFlow'],
-    description: "Explore object detection, semantic segmentation, and other advanced computer vision techniques.",
-    imageUrl: "https://images.unsplash.com/photo-1612012179831-2384a8397c44?q=80&w=870&auto=format&fit=crop"
-  },
-  {
-    courseName: "Natural Language Processing Basics",
-    tags: ['Intermediate', 'NLP'],
-    description: "Understand how machines process human language, from tokenization to sentiment analysis.",
-    imageUrl: "https://images.unsplash.com/photo-1555949963-ff98c872d2e8?q=80&w=870&auto=format&fit=crop"
-  },
-  {
-    courseName: "Unsupervised Learning Techniques",
-    tags: ['Intermediate', 'Statistics'],
-    description: "Dive into clustering, dimensionality reduction, and anomaly detection with Scikit-learn.",
-    imageUrl: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?q=80&w=870&auto=format&fit=crop"
-  },
-   {
-    courseName: "Reinforcement Learning",
-    tags: ['Advanced', 'AI'],
-    description: "Learn the principles of reinforcement learning by building agents that learn in complex environments.",
-    imageUrl: "https://images.unsplash.com/photo-1593349480503-64d481089938?q=80&w=870&auto=format&fit=crop"
-  },
-  {
-    courseName: "Introduction to Big Data",
-    tags: ['Beginner', 'Big Data'],
-    description: "Get started with big data technologies like Hadoop and Spark to process massive datasets.",
-    imageUrl: "https://images.unsplash.com/photo-1521464302861-ce944953d553?q=80&w=870&auto=format&fit=crop"
-  }
-];
+import Card from '../components/Card';
+import Button from '../components/Button';
+import { listPublicCourses, getPublicCourseDetails, enrollInCourse } from '../services/courses.service';
+import { PublicCourse, PublicCourseDetails } from '../types/courses';
+import toast from 'react-hot-toast';
 
 const CoursesPage = () => {
+  const [courses, setCourses] = useState<PublicCourse[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [selectedCourseSlug, setSelectedCourseSlug] = useState<string | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<PublicCourseDetails | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFetchingDetails, setIsFetchingDetails] = useState(false);
+
+  useEffect(() => {
+    const loadCourses = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await listPublicCourses({ limit: 100, offset: 0 });
+        setCourses(data);
+      } catch (err) {
+        console.error('Failed to load courses', err);
+        setError('Failed to load courses. Please try again later.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCourses();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedCourseSlug) {
+      setSelectedCourse(null);
+      return;
+    }
+
+    const loadCourseDetails = async () => {
+      setIsFetchingDetails(true);
+      try {
+        const details = await getPublicCourseDetails(selectedCourseSlug);
+        setSelectedCourse(details);
+      } catch (err) {
+        console.error('Failed to load course details', err);
+        toast.error('Could not load course details.');
+        setSelectedCourse(null);
+      } finally {
+        setIsFetchingDetails(false);
+      }
+    };
+
+    loadCourseDetails();
+  }, [selectedCourseSlug]);
+
+  const handleSelectCourse = (slug: string) => {
+    setSelectedCourseSlug(slug);
+    setIsModalOpen(true);
+  };
+
+  const handleEnroll = async (slug: string) => {
+    try {
+      await enrollInCourse(slug);
+      toast.success('Enrollment successful!');
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error('Enrollment failed', err);
+      toast.error('Enrollment failed. Please try again.');
+    }
+  };
+
+  const renderedCourses = useMemo(() => {
+    if (isLoading) {
+      return Array.from({ length: 6 }).map((_, index) => (
+        <Card key={index} className="p-6 animate-pulse">
+          <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded-md" />
+          <div className="mt-6 space-y-3">
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded" />
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded" />
+            <div className="h-4 w-1/2 bg-gray-200 dark:bg-gray-700 rounded" />
+          </div>
+          <Button className="mt-6 w-full" disabled>
+            Loading…
+          </Button>
+        </Card>
+      ));
+    }
+
+    if (error) {
+      return (
+        <div className="md:col-span-2 lg:col-span-3">
+          <Card className="text-center py-16">
+            <p className="text-lg text-red-600 dark:text-red-400">{error}</p>
+          </Card>
+        </div>
+      );
+    }
+
+    if (courses.length === 0) {
+      return (
+        <div className="md:col-span-2 lg:col-span-3">
+          <Card className="text-center py-16">
+            <p className="text-lg text-gray-600 dark:text-gray-400">No courses available right now. Please check back later.</p>
+          </Card>
+        </div>
+      );
+    }
+
+    return courses.map((course) => (
+      <div key={course.slug} className="h-full">
+        <CourseCard
+          status="public"
+          courseName={course.title}
+          description={course.description}
+          imageUrl={course.coverImageUrl}
+          onCourseClick={() => handleSelectCourse(course.slug)}
+        />
+      </div>
+    ));
+  }, [courses, error, isLoading]);
 
   return (
     <>
@@ -70,23 +138,22 @@ const CoursesPage = () => {
             </p>
           </div>
           <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {coursesData.map((course) => (
-              <div key={course.courseName} className="h-full">
-                  <CourseCard
-                  status="public"
-                  courseName={course.courseName}
-                  tags={course.tags}
-                  description={course.description}
-                  imageUrl={course.imageUrl}
-                  onCourseClick={() => setIsModalOpen(true)}
-                  />
-              </div>
-            ))}
+            {renderedCourses}
           </div>
         </section>
       </div>
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <CourseDetailView />
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedCourseSlug(null);
+          setSelectedCourse(null);
+        }}
+      >
+        <CourseDetailView
+          course={isFetchingDetails ? null : selectedCourse}
+          onEnroll={handleEnroll}
+        />
       </Modal>
     </>
   );

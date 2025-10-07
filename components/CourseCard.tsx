@@ -3,12 +3,12 @@ import { motion } from 'framer-motion';
 import Card from './Card';
 import ProgressBar from './ProgressBar';
 import Button from './Button';
+import { CourseProgressStatus } from '../types/courses';
 
 interface CourseCardProps {
   imageUrl: string;
   courseName: string;
-  // FIX: Added 'not_started' to the status union type to match the Course data type.
-  status: 'public' | 'in-progress' | 'completed' | 'not_started';
+  status: 'public' | CourseProgressStatus;
   tags?: string[];
   description?: string;
   progress?: number;
@@ -35,7 +35,6 @@ const CourseCard: React.FC<CourseCardProps> = ({
     switch (status) {
       case 'public':
         return 'Learn More';
-      // FIX: Added a case for 'not_started' to display appropriate button text.
       case 'not_started':
         return 'Start Course';
       case 'in-progress':
@@ -90,7 +89,6 @@ const CourseCard: React.FC<CourseCardProps> = ({
                 {description}
               </p>
             )}
-            {/* FIX: Included 'not_started' status to show progress bar for courses that are not yet started (0% progress). */}
             {(status === 'in-progress' || status === 'not_started') && typeof progress === 'number' && (
               <div>
                 <div className="flex justify-between items-center mb-1">

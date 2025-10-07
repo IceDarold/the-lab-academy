@@ -2,19 +2,20 @@ export interface User {
   id: string;
   fullName: string;
   email: string;
-  role: 'user' | 'admin';
+  role?: 'user' | 'admin';
 }
 
 export interface AuthTokens {
   accessToken: string;
+  tokenType: string;
   refreshToken?: string;
   expiresIn?: number;
   expiresAt?: number;
 }
 
-export interface AuthResponse extends AuthTokens {
-  user: User;
-}
+export type RegisterResult =
+  | { status: 'authenticated'; tokens: AuthTokens }
+  | { status: 'pending_confirmation' };
 
 export interface AuthContextType {
   user: User | null;
