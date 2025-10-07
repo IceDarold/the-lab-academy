@@ -15,6 +15,16 @@ export const RegisterSchema = z.object({
   terms: z.boolean().refine(val => val === true, {
     message: 'You must agree to the terms and privacy policy.',
   }),
+}).superRefine((val, ctx) => {
+  console.log("[Register.superRefine] got:", val);
+  // пример кастомной доп-проверки:
+  if (val.fullName.toLowerCase().includes("test")) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["fullName"],
+      message: "Full name cannot contain 'test'",
+    });
+  }
 });
 
 export type RegisterData = z.infer<typeof RegisterSchema>;
