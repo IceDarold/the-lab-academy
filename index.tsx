@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+import { AnimatePresence } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import LandingPage from './pages/LandingPage';
@@ -11,6 +12,7 @@ import CourseDashboardPage from './pages/CourseDashboardPage';
 import LessonPage from './pages/LessonPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import PageTransitionWrapper from './components/PageTransitionWrapper';
 
 const App = () => {
   const [route, setRoute] = useState(window.location.hash);
@@ -85,7 +87,11 @@ const App = () => {
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 antialiased">
       {!isAuthPage && <Navbar />}
       <main className="flex-grow">
-        {renderPage()}
+        <AnimatePresence mode="wait">
+          <PageTransitionWrapper key={route}>
+            {renderPage()}
+          </PageTransitionWrapper>
+        </AnimatePresence>
       </main>
       {!isAuthPage && <Footer />}
     </div>

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+// FIX: Import Variants type from framer-motion to correctly type animation variants.
+import { motion, Variants } from 'framer-motion';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import CourseCard from '../components/CourseCard';
@@ -8,6 +10,31 @@ import CourseDetailView from '../components/CourseDetailView';
 import { getMyCourses } from '../services/courses.service';
 import { Course } from '../types/courses';
 import CourseCardSkeleton from '../components/CourseCardSkeleton';
+
+// Animation variants for card containers and individual items
+// FIX: Explicitly type animation variants with the Variants type to prevent TypeScript from widening string literals (e.g., 'easeInOut') to the general 'string' type, which would cause a type error.
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+// FIX: Explicitly type animation variants with the Variants type to prevent TypeScript from widening string literals (e.g., 'easeInOut') to the general 'string' type, which would cause a type error.
+const itemVariants: Variants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.5,
+      ease: 'easeInOut',
+    },
+  },
+};
 
 // Static data for "Recommended Courses"
 const recommendedCoursesData = [
@@ -99,7 +126,12 @@ const DashboardPage = () => {
             <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8">
               Your current courses
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
               {isLoading ? (
                 Array.from({ length: 3 }).map((_, index) => <CourseCardSkeleton key={index} />)
               ) : error ? (
@@ -110,7 +142,13 @@ const DashboardPage = () => {
                 </div>
               ) : (
                 myCourses.map((course) => (
-                  <a href="#/dashboard/course" key={course.id} onClick={(e) => { e.preventDefault(); window.location.hash = `#/dashboard/course?slug=${course.slug}`; }} className="block h-full">
+                  <motion.a 
+                    href={`#/dashboard/course?slug=${course.slug}`} 
+                    key={course.id} 
+                    onClick={(e) => { e.preventDefault(); window.location.hash = `#/dashboard/course?slug=${course.slug}`; }} 
+                    className="block h-full"
+                    variants={itemVariants}
+                  >
                     <CourseCard
                       status={course.status}
                       courseName={course.title}
@@ -118,10 +156,10 @@ const DashboardPage = () => {
                       progress={course.progress}
                       imageUrl={course.coverImageUrl}
                     />
-                  </a>
+                  </motion.a>
                 ))
               )}
-            </div>
+            </motion.div>
           </section>
 
           {/* Recommended Courses */}
@@ -129,9 +167,14 @@ const DashboardPage = () => {
             <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8">
               Start a New Journey
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
               {recommendedCoursesData.map((course) => (
-                <div key={course.courseName} className="h-full">
+                <motion.div key={course.courseName} className="h-full" variants={itemVariants}>
                   <CourseCard
                     status="public"
                     courseName={course.courseName}
@@ -140,9 +183,9 @@ const DashboardPage = () => {
                     imageUrl={course.imageUrl}
                     onCourseClick={() => setIsModalOpen(true)}
                   />
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </section>
 
         </div>

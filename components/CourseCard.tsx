@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import Card from './Card';
 import ProgressBar from './ProgressBar';
 import Button from './Button';
@@ -49,9 +50,11 @@ const CourseCard: React.FC<CourseCardProps> = ({
   const completedBorderStyle = status === 'completed' ? 'border-green-500' : 'dark:border-gray-700';
 
   return (
-    <div 
-        className="transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer rounded-lg h-full"
-        onClick={onCourseClick}
+    <motion.div
+      className="cursor-pointer rounded-lg h-full shadow-lg"
+      onClick={onCourseClick}
+      whileHover={{ scale: 1.03, rotate: 1 }}
+      transition={{ type: "spring", stiffness: 400, damping: 10 }}
     >
       <Card className={`p-0 overflow-hidden flex flex-col h-full ${completedBorderStyle}`}>
         <div className="relative">
@@ -117,7 +120,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
           </div>
         </div>
       </Card>
-    </div>
+    </motion.div>
   );
 };
 

@@ -1,34 +1,32 @@
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Card from '../components/Card';
 import SocialLoginButton from '../components/SocialLoginButton';
 import { useAuth } from '../contexts/AuthContext';
+import { RegisterSchema, RegisterData } from '../lib/validators/auth';
 
 const RegistrationPage = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [agreed, setAgreed] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { register } = useAuth();
+  const [apiError, setApiError] = useState<string | null>(null);
+  const { register: registerUser } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!agreed) {
-        setError("You must agree to the terms and privacy policy.");
-        return;
-    }
-    setError(null);
-    setIsLoading(true);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterData>({
+    resolver: zodResolver(RegisterSchema),
+  });
+
+  const onSubmit = async (data: RegisterData) => {
+    setApiError(null);
     try {
-        await register(name, email, password);
-        // Redirect is handled within the register function in AuthContext
+      await registerUser(data.fullName, data.email, data.password);
+      // Redirect is handled within the register function in AuthContext
     } catch (err) {
-        setError((err as Error).message);
-    } finally {
-        setIsLoading(false);
+      setApiError((err as Error).message);
     }
   };
   
@@ -52,54 +50,49 @@ const RegistrationPage = () => {
         </div>
         <div className="mt-8">
             <Card>
-                <form className="space-y-6" onSubmit={handleSubmit}>
+                <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
                     <Input
                         id="full-name"
                         label="Full Name"
                         type="text"
-                        name="name"
                         autoComplete="name"
-                        required
                         placeholder="Ada Lovelace"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        disabled={isLoading}
+                        {...register('fullName')}
+                        // FIX: Cast message to string to resolve TypeScript type mismatch from react-hook-form.
+                        error={errors.fullName?.message as string}
+                        disabled={isSubmitting}
                     />
                     <Input
                         id="email-address"
                         label="Email address"
                         type="email"
-                        name="email"
                         autoComplete="email"
-                        required
                         placeholder="you@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        disabled={isLoading}
+                        {...register('email')}
+                        // FIX: Cast message to string to resolve TypeScript type mismatch from react-hook-form.
+                        error={errors.email?.message as string}
+                        disabled={isSubmitting}
                     />
                     <Input
                         id="password"
                         label="Password"
                         type="password"
-                        name="password"
                         autoComplete="new-password"
-                        required
                         placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        disabled={isLoading}
+                        {...register('password')}
+                        // FIX: Cast message to string to resolve TypeScript type mismatch from react-hook-form.
+                        error={errors.password?.message as string}
+                        disabled={isSubmitting}
                     />
 
                     <div className="flex items-start">
                         <div className="flex items-center h-5">
                             <input
                                 id="terms"
-                                name="terms"
                                 type="checkbox"
-                                checked={agreed}
-                                onChange={(e) => setAgreed(e.target.checked)}
+                                {...register('terms')}
                                 className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                                disabled={isLoading}
+                                disabled={isSubmitting}
                             />
                         </div>
                         <div className="ml-3 text-sm">
@@ -113,19 +106,25 @@ const RegistrationPage = () => {
                                 Privacy Policy
                                 </a>
                             </label>
+                             {errors.terms && (
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                                    {/* FIX: Cast message to string to render it as a valid ReactNode. */}
+                                    {errors.terms.message as string}
+                                </p>
+                            )}
                         </div>
                     </div>
 
-                    {error && (
+                    {apiError && (
                         <div className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-600 rounded-md">
                             <p className="text-sm text-red-700 dark:text-red-300 text-center font-medium">
-                                {error}
+                                {apiError}
                             </p>
                         </div>
                     )}
 
                     <div>
-                        <Button type="submit" variant="primary" className="w-full" loading={isLoading}>
+                        <Button type="submit" variant="primary" className="w-full" loading={isSubmitting}>
                             Create account
                         </Button>
                     </div>
