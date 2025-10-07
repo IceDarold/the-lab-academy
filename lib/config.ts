@@ -17,20 +17,21 @@ const DEFAULT_DEV_API_URL = 'http://localhost:8000/api';
 const DEFAULT_PROD_API_URL = 'https://api.the-lab-academy.com/api';
 
 const getEnv = (key: string): string | undefined => {
-  try {
-    if (typeof import.meta !== 'undefined') {
-      const meta = import.meta as unknown as { env?: Record<string, string | undefined> };
-      const value = meta.env?.[key];
-      if (typeof value === 'string') {
-        return value;
-      }
-    }
-  } catch {
-    // ignore and fall back to process.env
+  // Vite replaces import.meta.env during build, so we can safely read it directly.
+  const env = (import.meta as { env: Record<string, string | boolean | undefined> }).env;
+  const value = env?.[key];
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (typeof value === 'boolean') {
+    return value ? 'true' : 'false';
   }
 
   if (typeof process !== 'undefined' && process.env) {
-    return process.env[key];
+    const processValue = process.env[key];
+    if (typeof processValue === 'string') {
+      return processValue;
+    }
   }
 
   return undefined;
@@ -47,7 +48,7 @@ const resolveApiUrl = (): string => {
     return envUrl.trim().replace(/\/+$/, '');
   }
 
-  const mode = getEnv('MODE') ?? getEnv('NODE_ENV') ?? 'development';
+  const mode = (getEnv('MODE') ?? getEnv('NODE_ENV') ?? 'development').toLowerCase();
   return mode === 'production' ? DEFAULT_PROD_API_URL : DEFAULT_DEV_API_URL;
 };
 
