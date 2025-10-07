@@ -35,3 +35,20 @@ export const ChangePasswordSchema = z.object({
 });
 
 export type ChangePasswordData = z.infer<typeof ChangePasswordSchema>;
+
+export const ForgotPasswordSchema = z.object({
+  email: z.string().email({ message: 'Invalid email format' }),
+});
+
+export type ForgotPasswordData = z.infer<typeof ForgotPasswordSchema>;
+
+export const ResetPasswordSchema = z.object({
+  token: z.string().min(1, { message: 'Reset token is required' }),
+  newPassword: z.string().min(8, { message: 'Password must be at least 8 characters long' }),
+  confirmPassword: z.string(),
+}).refine(data => data.newPassword === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
+export type ResetPasswordData = z.infer<typeof ResetPasswordSchema>;

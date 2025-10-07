@@ -34,7 +34,7 @@ const LoginPage = () => {
 
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    // Placeholder for forgot password link
+    window.location.hash = '#/forgot-password';
   };
 
   return (

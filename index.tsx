@@ -8,6 +8,8 @@ import Footer from './components/Footer';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegistrationPage from './pages/RegistrationPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import CoursesPage from './pages/CoursesPage';
 import DashboardPage from './pages/DashboardPage';
 import CourseDashboardPage from './pages/CourseDashboardPage';
@@ -76,6 +78,10 @@ const App = () => {
         return <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"><LoginPage /></div>;
       case '#/register':
         return <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"><RegistrationPage /></div>;
+      case '#/forgot-password':
+        return <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"><ForgotPasswordPage /></div>;
+      case '#/reset-password':
+        return <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"><ResetPasswordPage /></div>;
       case '#/courses':
         return <CoursesPage />;
       case '#/dashboard':

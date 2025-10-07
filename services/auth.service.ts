@@ -79,3 +79,11 @@ export const logout = async (): Promise<void> => {
   // If one becomes available, implement the call here.
   return Promise.resolve();
 };
+
+export const forgotPassword = async (email: string): Promise<void> => {
+  await api.post('/v1/auth/forgot-password', { email });
+};
+
+export const resetPassword = async (token: string, newPassword: string): Promise<void> => {
+  await api.post('/v1/auth/reset-password', { token, newPassword });
+};
