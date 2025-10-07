@@ -51,7 +51,7 @@ const RegistrationPage = () => {
     const email = e.target.value;
     if (email) {
       // First check if email format is valid using the same regex as schema
-      const isValidFormat = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+      const isValidFormat = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/.test(email);
       console.log('Email blur:', email, 'isValidFormat:', isValidFormat);
 
       if (isValidFormat) {
