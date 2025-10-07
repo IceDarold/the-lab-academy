@@ -74,7 +74,7 @@ const LoginPage = () => {
                         // FIX: Cast message to string to resolve TypeScript type mismatch from react-hook-form.
                         error={errors.password?.message as string}
                         disabled={isSubmitting}
-                                        />
+                    />
 
                     <div className="flex items-center">
                         <input
@@ -91,8 +91,7 @@ const LoginPage = () => {
                         </label>
                     </div>
 
-                    <div className="flex items-center justify-between"></search>
-</search_and_replace>
+                    <div className="flex items-center justify-between">
                         <div className="flex items-center">
                             <input
                                 id="remember-me"
