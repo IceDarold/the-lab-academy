@@ -50,24 +50,16 @@ const RegistrationPage = () => {
   const handleEmailBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const email = e.target.value;
     if (email) {
-      // First check if email format is valid using the same regex as schema
-      const isValidFormat = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/.test(email);
-      console.log('Email blur:', email, 'isValidFormat:', isValidFormat);
-
-      if (isValidFormat) {
-        try {
-          const exists = await checkEmail(email);
-          if (exists) {
-            setEmailExistsError('This email is already registered');
-          } else {
-            setEmailExistsError(null);
-          }
-        } catch (error) {
-          // If error, assume not exists to allow registration
+      console.log('Email blur:', email);
+      try {
+        const exists = await checkEmail(email);
+        if (exists) {
+          setEmailExistsError('This email is already registered');
+        } else {
           setEmailExistsError(null);
         }
-      } else {
-        // If format is invalid, don't check existence
+      } catch (error) {
+        // If error, assume not exists to allow registration
         setEmailExistsError(null);
       }
     }
