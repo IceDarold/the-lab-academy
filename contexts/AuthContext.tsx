@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, AuthContextType } from '../types/auth';
 import FullScreenLoader from '../components/FullScreenLoader';
-import { login as loginService, register as registerService, logout as logoutService } from '../services/auth.service';
+import { login as loginService, register as registerService, logout as logoutService, getMe } from '../services/auth.service';
+import api from '../lib/api';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -10,21 +11,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // This effect runs once on app load to check for an existing session.
-    setIsLoading(true);
-    const timer = setTimeout(() => {
-      // In a real app, you'd verify a token from localStorage here.
-      // For now, we simulate that no user is logged in on initial load.
-      setUser(null);
+    const checkSession = async () => {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        try {
+          const currentUser = await getMe();
+          setUser(currentUser);
+        } catch (error) {
+          console.error("Session check failed, token might be invalid:", error);
+          // If the token is invalid, clear it from storage and headers
+          localStorage.removeItem('authToken');
+          delete api.defaults.headers.common['Authorization'];
+          setUser(null);
+        }
+      }
       setIsLoading(false);
-    }, 1000);
+    };
 
-    return () => clearTimeout(timer);
+    checkSession();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-        const loggedInUser = await loginService(email, password);
+        const { user: loggedInUser, token } = await loginService(email, password);
+        localStorage.setItem('authToken', token);
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         setUser(loggedInUser);
         window.location.hash = '#/dashboard';
     } catch (error) {
@@ -36,13 +48,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     await logoutService();
+    localStorage.removeItem('authToken');
+    delete api.defaults.headers.common['Authorization'];
     setUser(null);
     window.location.hash = '#/';
   };
 
   const register = async (fullName: string, email: string, password: string) => {
      try {
-        const newUser = await registerService(fullName, email, password);
+        const { user: newUser, token } = await registerService(fullName, email, password);
+        localStorage.setItem('authToken', token);
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         setUser(newUser);
         window.location.hash = '#/dashboard';
     } catch (error) {

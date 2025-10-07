@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AnimatePresence } from 'framer-motion';
+import { Toaster } from 'react-hot-toast';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import LandingPage from './pages/LandingPage';
@@ -10,6 +11,7 @@ import CoursesPage from './pages/CoursesPage';
 import DashboardPage from './pages/DashboardPage';
 import CourseDashboardPage from './pages/CourseDashboardPage';
 import LessonPage from './pages/LessonPage';
+import ProfilePage from './pages/ProfilePage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import PageTransitionWrapper from './components/PageTransitionWrapper';
@@ -63,6 +65,9 @@ const App = () => {
     if (route.startsWith('#/lesson')) {
         return <ProtectedRoute><LessonPage /></ProtectedRoute>;
     }
+    if (route.startsWith('#/dashboard/profile')) {
+        return <ProtectedRoute><ProfilePage /></ProtectedRoute>;
+    }
 
     // Handle static routes
     switch (route) {
@@ -85,6 +90,7 @@ const App = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 antialiased">
+      <Toaster position="top-right" />
       {!isAuthPage && <Navbar />}
       <main className="flex-grow">
         <AnimatePresence mode="wait">
