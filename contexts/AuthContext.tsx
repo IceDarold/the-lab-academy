@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { isAxiosError } from 'axios';
 import { User, AuthContextType, AuthTokens } from '../types/auth';
 import FullScreenLoader from '../components/FullScreenLoader';
 import {
@@ -15,6 +16,20 @@ import {
   LogoutEventDetail,
   TokenRefreshedDetail,
 } from '../lib/authEvents';
+
+const extractErrorMessage = (error: unknown): string => {
+  if (isAxiosError(error)) {
+    const data = error.response?.data;
+    if (data?.message) return data.message;
+    if (data?.detail) return data.detail;
+    if (data?.error) return data.error;
+    return error.message || 'An error occurred';
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return 'An unknown error occurred';
+};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -157,7 +172,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('AuthContext login error:', error);
       // Re-throw the error so the UI component can handle it
-      throw error;
+      throw new Error(extractErrorMessage(error));
     }
   };
 
@@ -192,7 +207,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('AuthContext register error:', error);
       // Re-throw the error so the UI component can handle it
-      throw error;
+      throw new Error(extractErrorMessage(error));
     }
   };
 
