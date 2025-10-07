@@ -6,6 +6,7 @@ import {
   login as loginService,
   register as registerService,
   logout as logoutService,
+  checkEmail as checkEmailService,
   getMe,
 } from '../services/auth.service';
 import api from '../lib/api';
@@ -209,6 +210,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Re-throw the error so the UI component can handle it
       throw new Error(extractErrorMessage(error));
     }
+};
+  const checkEmail = async (email: string): Promise<boolean> => {
+    try {
+      return await checkEmailService(email);
+    } catch (error) {
+      console.error('AuthContext checkEmail error:', error);
+      // If error, assume exists to be safe
+      return true;
+    }
   };
 
   const value = {
@@ -217,6 +227,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading,
     login,
     logout,
+    checkEmail,
     register,
   };
   

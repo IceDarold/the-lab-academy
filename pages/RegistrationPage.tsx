@@ -11,9 +11,10 @@ import { RegisterSchema, RegisterData } from '../lib/validators/auth';
 
 const RegistrationPage = () => {
   const [apiError, setApiError] = useState<string | null>(null);
+  const [emailExistsError, setEmailExistsError] = useState<string | null>(null);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { register: registerUser } = useAuth();
+  const { register: registerUser, checkEmail } = useAuth();
 
   const {
     register,
@@ -24,6 +25,9 @@ const RegistrationPage = () => {
   });
 
   const onSubmit = async (data: RegisterData) => {
+    if (emailExistsError) {
+      return;
+    }
     setApiError(null);
     try {
       const result = await registerUser(data.fullName, data.email, data.password);
@@ -33,6 +37,29 @@ const RegistrationPage = () => {
       // For authenticated, redirect is handled in AuthContext
     } catch (err) {
       setApiError((err as Error).message);
+    }
+  };
+
+  const handleEmailBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const email = e.target.value;
+    if (email && !errors.email) {
+      try {
+        const exists = await checkEmail(email);
+        if (exists) {
+          setEmailExistsError('This email is already registered');
+        } else {
+          setEmailExistsError(null);
+        }
+      } catch (error) {
+        // If error, assume not exists to allow registration
+        setEmailExistsError(null);
+      }
+    }
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (emailExistsError) {
+      setEmailExistsError(null);
     }
   };
 
@@ -75,8 +102,10 @@ const RegistrationPage = () => {
                         autoComplete="email"
                         placeholder="you@example.com"
                         {...register('email')}
+                        onBlur={handleEmailBlur}
+                        onChange={handleEmailChange}
                         // FIX: Cast message to string to resolve TypeScript type mismatch from react-hook-form.
-                        error={errors.email?.message as string}
+                        error={errors.email?.message as string || emailExistsError}
                         disabled={isSubmitting}
                     />
                     <Input

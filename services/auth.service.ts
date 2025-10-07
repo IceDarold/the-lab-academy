@@ -68,6 +68,11 @@ export const getMe = async (): Promise<User> => {
     role: data.role,
   };
 };
+export const checkEmail = async (email: string): Promise<boolean> => {
+  const response = await api.post('/v1/auth/check-email', { email });
+  return response.data.exists;
+};
+
 
 export const logout = async (): Promise<void> => {
   // The reference API does not expose a logout endpoint.
