@@ -5,6 +5,17 @@ export interface User {
   role: 'user' | 'admin';
 }
 
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn?: number;
+  expiresAt?: number;
+}
+
+export interface AuthResponse extends AuthTokens {
+  user: User;
+}
+
 export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
