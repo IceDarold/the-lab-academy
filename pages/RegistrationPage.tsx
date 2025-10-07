@@ -44,9 +44,8 @@ const RegistrationPage = () => {
   const handleEmailBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const email = e.target.value;
     if (email) {
-      // First check if email format is valid
-      const emailSchema = z.string().email();
-      const isValidFormat = emailSchema.safeParse(email).success;
+      // First check if email format is valid using the same regex as schema
+      const isValidFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
       if (isValidFormat) {
         try {
