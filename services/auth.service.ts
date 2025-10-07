@@ -36,8 +36,8 @@ export const register = async (
 ): Promise<RegisterResult> => {
   const payload = {
     full_name: fullName,
-    email,
-    password,
+    email: email,
+    password: password,
   };
 
   const response = await api.post('/v1/auth/register', payload);

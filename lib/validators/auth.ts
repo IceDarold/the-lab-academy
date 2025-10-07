@@ -8,14 +8,27 @@ export const LoginSchema = z.object({
 export type LoginData = z.infer<typeof LoginSchema>;
 
 
+const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,}$/;
+
+const sanitizeEmail = (s: string) =>
+  s
+    .normalize("NFKC")
+    .replace(/\p{Cf}/gu, "") // убираем форматные символы: ZWSP/BOM/BiDi
+    .replace(/\s/gu, "")     // убираем любые пробелы, включая NBSP
+    .toLowerCase();
+
 export const RegisterSchema = z.object({
-  fullName: z.string().min(2, { message: 'Name must be at least 2 characters long' }),
-  email: z.string().trim().regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/i, { message: 'Invalid email format' }),
-  password: z.string().min(8, { message: 'Password must be at least 8 characters long' }),
-  terms: z.boolean().refine(val => val === true, {
-    message: 'You must agree to the terms and privacy policy.',
+  fullName: z.string().min(2, { message: "Name must be at least 2 characters long" }),
+  email: z
+    .string()
+    .transform(sanitizeEmail)
+    .regex(EMAIL_REGEX, { message: "Invalid email format" }),
+  password: z.string().min(8, { message: "Password must be at least 8 characters long" }),
+  terms: z.boolean().refine(Boolean, {
+    message: "You must agree to the terms and privacy policy.",
   }),
 });
+
 
 export type RegisterData = z.infer<typeof RegisterSchema>;
 
