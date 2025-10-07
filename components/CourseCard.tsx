@@ -1,0 +1,124 @@
+import React from 'react';
+import Card from './Card';
+import ProgressBar from './ProgressBar';
+import Button from './Button';
+
+interface CourseCardProps {
+  imageUrl: string;
+  courseName: string;
+  // FIX: Added 'not_started' to the status union type to match the Course data type.
+  status: 'public' | 'in-progress' | 'completed' | 'not_started';
+  tags?: string[];
+  description?: string;
+  progress?: number;
+  onCourseClick?: () => void;
+}
+
+const CheckIcon = () => (
+    <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+    </svg>
+);
+
+
+const CourseCard: React.FC<CourseCardProps> = ({
+  imageUrl,
+  courseName,
+  status,
+  tags,
+  description,
+  progress,
+  onCourseClick,
+}) => {
+  const getButtonText = () => {
+    switch (status) {
+      case 'public':
+        return 'Learn More';
+      // FIX: Added a case for 'not_started' to display appropriate button text.
+      case 'not_started':
+        return 'Start Course';
+      case 'in-progress':
+        return 'Continue Course';
+      case 'completed':
+        return 'Repeat / View Materials';
+      default:
+        return '';
+    }
+  };
+
+  const completedBorderStyle = status === 'completed' ? 'border-green-500' : 'dark:border-gray-700';
+
+  return (
+    <div 
+        className="transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer rounded-lg h-full"
+        onClick={onCourseClick}
+    >
+      <Card className={`p-0 overflow-hidden flex flex-col h-full ${completedBorderStyle}`}>
+        <div className="relative">
+            <div className="aspect-w-16 aspect-h-9">
+                <img className="object-cover w-full h-full brightness-90" src={imageUrl} alt={`Image for ${courseName}`} />
+            </div>
+            {status === 'completed' && (
+                <div className="absolute inset-0 bg-green-600 bg-opacity-40 flex items-center justify-center">
+                    <CheckIcon />
+                </div>
+            )}
+        </div>
+        
+        <div className="p-6 flex-grow flex flex-col">
+          {tags && tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-block bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full dark:bg-indigo-900 dark:text-indigo-300"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{courseName}</h3>
+
+          <div className="flex-grow mt-4 space-y-4">
+            {status === 'public' && (
+              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
+                {description}
+              </p>
+            )}
+            {/* FIX: Included 'not_started' status to show progress bar for courses that are not yet started (0% progress). */}
+            {(status === 'in-progress' || status === 'not_started') && typeof progress === 'number' && (
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Progress</span>
+                  <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{progress}%</span>
+                </div>
+                <ProgressBar progress={progress} />
+              </div>
+            )}
+            {status === 'completed' && (
+              <div className="flex items-center space-x-2 text-green-600 dark:text-green-400 font-semibold">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
+                </svg>
+                <span>Course Complete</span>
+              </div>
+            )}
+          </div>
+          
+          <div className="mt-6">
+            <Button
+              variant={status === 'completed' ? 'secondary' : 'primary'}
+              className="w-full"
+            >
+              {getButtonText()}
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+export default CourseCard;
