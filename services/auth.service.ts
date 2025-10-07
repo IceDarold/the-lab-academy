@@ -69,7 +69,8 @@ export const getMe = async (): Promise<User> => {
   };
 };
 export const checkEmail = async (email: string): Promise<boolean> => {
-  const response = await api.post('/v1/auth/check-email', { email });
+  const response = await api.post('/v1/auth/check-email', { email: email.toLowerCase() });
+  console.log('checkEmail response for', email, ':', response.data);
   return response.data.exists;
 };
 
