@@ -6,6 +6,12 @@ import InteractiveCodeRunner from './InteractiveCodeRunner';
 import QuizComponent from './QuizComponent';
 import Card from './Card';
 
+interface CellRendererProps {
+  cell: Cell;
+  pyodideState: 'idle' | 'loading' | 'ready' | 'error';
+  onExecute: (code: string) => Promise<string[]>;
+}
+
 const LightBulbIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-1.125a6.01 6.01 0 0 0 2.25-3.375m-5.25 4.5 1.5-1.125a6.01 6.01 0 0 1 2.25-3.375m-5.25 4.5V18m0-5.25h5.25M6 18h12a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15A2.25 2.25 0 0 0 2.25 6.75v9A2.25 2.25 0 0 0 4.5 18Z" />
@@ -13,7 +19,7 @@ const LightBulbIcon = () => (
 );
 
 
-const CellRenderer: React.FC<{ cell: Cell }> = ({ cell }) => {
+const CellRenderer: React.FC<CellRendererProps> = ({ cell, pyodideState, onExecute }) => {
   switch (cell.type) {
     case 'text':
       return (
@@ -34,7 +40,11 @@ const CellRenderer: React.FC<{ cell: Cell }> = ({ cell }) => {
     case 'code':
       return (
         <div id={cell.id} className="not-prose my-12">
-            <InteractiveCodeRunner initialCode={cell.initialCode} />
+            <InteractiveCodeRunner 
+                initialCode={cell.initialCode}
+                pyodideState={pyodideState}
+                onExecute={onExecute}
+            />
         </div>
       );
       
@@ -60,7 +70,11 @@ const CellRenderer: React.FC<{ cell: Cell }> = ({ cell }) => {
                     <div>
                         <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">{cell.title || 'Challenge'}</h3>
                         <p className="mb-4 text-gray-700 dark:text-gray-300">{cell.instructions}</p>
-                        <InteractiveCodeRunner initialCode={cell.initialCode} />
+                        <InteractiveCodeRunner 
+                            initialCode={cell.initialCode}
+                            pyodideState={pyodideState}
+                            onExecute={onExecute}
+                        />
                     </div>
                 </div>
             </Card>

@@ -1,14 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Editor from 'react-simple-code-editor';
 import Button from './Button';
 import Card from './Card';
 
-// To avoid TypeScript errors since Prism and Pyodide are loaded from CDN script tags
+// To avoid TypeScript errors since Prism is loaded from a CDN script tag
 declare const Prism: any;
-declare const loadPyodide: (config: { indexURL: string, stdout: (text: string) => void, stderr: (text: string) => void }) => Promise<any>;
 
 interface InteractiveCodeRunnerProps {
   initialCode: string;
+  pyodideState: 'idle' | 'loading' | 'ready' | 'error';
+  onExecute: (code: string) => Promise<string[]>;
 }
 
 // Heroicon SVGs for buttons
@@ -25,55 +26,28 @@ const PlayIcon = () => (
 );
 
 
-const InteractiveCodeRunner: React.FC<InteractiveCodeRunnerProps> = ({ initialCode }) => {
+const InteractiveCodeRunner: React.FC<InteractiveCodeRunnerProps> = ({ initialCode, pyodideState, onExecute }) => {
     const [code, setCode] = useState(initialCode);
-    const pyodideRef = useRef<any>(null);
-    const [pyodideState, setPyodideState] = useState<'loading' | 'ready' | 'error'>('loading');
     const [isExecuting, setIsExecuting] = useState<boolean>(false);
     const [output, setOutput] = useState<string[]>([]);
 
     useEffect(() => {
-        const initializePyodide = async () => {
-            setOutput(['⚙️ Initializing Python environment...']);
-            try {
-                const pyodide = await loadPyodide({
-                    indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/',
-                    stdout: (text) => setOutput(prev => [...prev, text]),
-                    stderr: (text) => setOutput(prev => [...prev, text]),
-                });
-                pyodideRef.current = pyodide;
-                
-                setOutput(prev => [...prev, 'Loading scientific libraries (pandas, scikit-learn)... This may take a moment.']);
-                await pyodide.loadPackage(['numpy', 'pandas', 'scikit-learn']);
-
-                setOutput(prev => [...prev, '✅ Environment ready.']);
-                
-                setTimeout(() => {
-                    setPyodideState('ready');
-                    setOutput([]);
-                }, 1500);
-
-            } catch (e) {
-                console.error(e);
-                setOutput(prev => [...prev, '❌ Failed to load Python environment.']);
-                setPyodideState('error');
-            }
-        };
-        initializePyodide();
-    }, []);
-
+        setCode(initialCode);
+        setOutput([]);
+    }, [initialCode]);
+    
     const handleRun = async () => {
-        const pyodide = pyodideRef.current;
-        if (!pyodide || pyodideState !== 'ready') return;
+        if (pyodideState !== 'ready') return;
 
         setIsExecuting(true);
         setOutput([]);
 
         try {
-            await pyodide.runPythonAsync(code);
+            const result = await onExecute(code);
+            setOutput(result);
         } catch (e) {
             const err = e as Error;
-            setOutput(prev => [...prev, err.message]);
+            setOutput([err.message]);
         } finally {
             setIsExecuting(false);
         }
@@ -96,19 +70,13 @@ const InteractiveCodeRunner: React.FC<InteractiveCodeRunnerProps> = ({ initialCo
       return codeToHighlight;
     }
 
+    const isReady = pyodideState === 'ready';
+
     return (
         <Card className="!p-0 overflow-hidden shadow-lg relative border border-gray-200 dark:border-gray-700">
-            {pyodideState === 'loading' && (
-                <div className="absolute inset-0 bg-gray-800/80 backdrop-blur-sm flex flex-col items-center justify-center z-10 p-4">
-                     <svg className="animate-spin h-8 w-8 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                     <div className="text-center text-white">
-                        {output.map((line, i) => <p key={i}>{line}</p>)}
-                     </div>
-                </div>
-            )}
             {pyodideState === 'error' && (
                  <div className="absolute inset-0 bg-red-900/80 backdrop-blur-sm flex items-center justify-center z-10 p-4">
-                     <p className="text-white font-semibold text-center">❌ Failed to load Python environment. Please try refreshing the page.</p>
+                     <p className="text-white font-semibold text-center">❌ Python environment failed to load.</p>
                 </div>
             )}
             {/* Toolbar */}
@@ -117,7 +85,7 @@ const InteractiveCodeRunner: React.FC<InteractiveCodeRunnerProps> = ({ initialCo
                     Live Python Editor
                 </h3>
                 <div className="flex items-center space-x-2">
-                    <Button variant="secondary" onClick={handleReset} disabled={pyodideState !== 'ready'} className="py-1 px-2 text-xs !font-semibold">
+                    <Button variant="secondary" onClick={handleReset} disabled={!isReady} className="py-1 px-2 text-xs !font-semibold">
                         <ResetIcon />
                         <span className="ml-1.5">Reset</span>
                     </Button>
@@ -125,7 +93,7 @@ const InteractiveCodeRunner: React.FC<InteractiveCodeRunnerProps> = ({ initialCo
                         variant="primary" 
                         onClick={handleRun} 
                         loading={isExecuting} 
-                        disabled={pyodideState !== 'ready' || isExecuting}
+                        disabled={!isReady || isExecuting}
                         className="py-1 px-2 text-xs !font-semibold"
                     >
                         <PlayIcon />
@@ -147,7 +115,7 @@ const InteractiveCodeRunner: React.FC<InteractiveCodeRunnerProps> = ({ initialCo
                         fontSize: 14,
                         outline: 0,
                     }}
-                    disabled={pyodideState !== 'ready'}
+                    disabled={!isReady}
                 />
             </div>
 
@@ -158,7 +126,7 @@ const InteractiveCodeRunner: React.FC<InteractiveCodeRunnerProps> = ({ initialCo
                 </h3>
                 <pre className="p-4 bg-black text-white text-sm whitespace-pre-wrap break-words font-mono min-h-[50px] max-h-64 overflow-y-auto">
                     <code>
-                       {output.length === 0 && pyodideState === 'ready' && (
+                       {output.length === 0 && isReady && (
                             <div className="text-gray-500 select-none">
                                 &gt; Output will appear here...
                             </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Button from '../components/Button';
 import { getLessonBySlug } from '../services/lessons.service';
 import { completeLesson, getLessonNavigation } from '../services/courses.service';
@@ -6,6 +6,10 @@ import { Lesson, TextCell } from '../types/lessons';
 import LessonPageSkeleton from '../components/LessonPageSkeleton';
 import Card from '../components/Card';
 import CellRenderer from '../components/CellRenderer';
+
+// To avoid TypeScript errors since Pyodide is loaded from CDN script tags
+// FIX: Updated the type declaration for `loadPyodide` to accept an optional configuration object, which is required for specifying the `indexURL`. This resolves the error on line 36.
+declare const loadPyodide: (config?: { indexURL: string }) => Promise<any>;
 
 const ChevronRightIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -15,11 +19,58 @@ const ChevronRightIcon = () => (
 
 const LessonPage = () => {
   const [lesson, setLesson] = useState<Lesson | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingLesson, setIsLoadingLesson] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
   const [navigation, setNavigation] = useState<{ previous: string | null; next: string | null }>({ previous: null, next: null });
+
+  // --- Pyodide State Management ---
+  const pyodideRef = useRef<any>(null);
+  const [pyodideState, setPyodideState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+
+  // Effect to initialize Pyodide once per lesson page load
+  useEffect(() => {
+    const initializePyodide = async () => {
+        setPyodideState('loading');
+        try {
+            const pyodide = await loadPyodide({
+                indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/',
+            });
+            await pyodide.loadPackage(['numpy', 'pandas', 'scikit-learn']);
+            pyodideRef.current = pyodide;
+            setPyodideState('ready');
+        } catch (e) {
+            console.error("Pyodide initialization failed:", e);
+            setPyodideState('error');
+        }
+    };
+    initializePyodide();
+  }, []);
+
+  const executePythonCode = async (code: string): Promise<string[]> => {
+    const pyodide = pyodideRef.current;
+    if (!pyodide || pyodideState !== 'ready') {
+      return ['Error: Python environment is not ready.'];
+    }
+
+    const output: string[] = [];
+    pyodide.setStdout({ batched: (msg: string) => output.push(msg) });
+    pyodide.setStderr({ batched: (msg: string) => output.push(msg) });
+
+    try {
+      await pyodide.runPythonAsync(code);
+    } catch (e) {
+      const err = e as Error;
+      output.push(err.message);
+    } finally {
+      // Reset stdout/stderr to default (console log)
+      pyodide.setStdout({});
+      pyodide.setStderr({});
+    }
+    
+    return output;
+  };
 
   const fetchLesson = async () => {
     try {
@@ -30,7 +81,7 @@ const LessonPage = () => {
         throw new Error("Lesson slug not found in URL.");
       }
       
-      setIsLoading(true);
+      setIsLoadingLesson(true);
       setError(null);
       setNavigation({ previous: null, next: null });
 
@@ -49,7 +100,7 @@ const LessonPage = () => {
       setError((err as Error).message);
       console.error(err);
     } finally {
-      setIsLoading(false);
+      setIsLoadingLesson(false);
     }
   };
 
@@ -140,17 +191,18 @@ const LessonPage = () => {
     }
   };
 
+  const pageIsLoading = isLoadingLesson || pyodideState === 'loading' || pyodideState === 'idle';
 
-  if (isLoading) {
+  if (pageIsLoading) {
     return <LessonPageSkeleton />;
   }
 
-  if (error) {
+  if (error || pyodideState === 'error') {
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
             <Card>
                 <h1 className="text-2xl font-bold text-red-600 dark:text-red-400">An Error Occurred</h1>
-                <p className="mt-4 text-gray-600 dark:text-gray-400">{error}</p>
+                <p className="mt-4 text-gray-600 dark:text-gray-400">{error || "Failed to load the Python environment. Please try refreshing the page."}</p>
                 <Button variant="primary" className="mt-6" onClick={fetchLesson}>
                     Try Again
                 </Button>
@@ -215,7 +267,12 @@ const LessonPage = () => {
           
           <article className="mt-8 prose prose-lg dark:prose-invert max-w-none prose-h2:font-bold prose-h2:text-2xl prose-h2:mb-4 prose-h2:mt-10 prose-p:leading-relaxed prose-li:my-2 prose-a:text-indigo-600 dark:prose-a:text-indigo-400 prose-a:font-semibold hover:prose-a:text-indigo-500 prose-code:bg-gray-100 prose-code:dark:bg-gray-800 prose-code:p-1 prose-code:rounded prose-code:font-mono prose-code:text-sm">
              {lesson.cells.map(cell => (
-                <CellRenderer cell={cell} key={cell.id} />
+                <CellRenderer 
+                  cell={cell} 
+                  key={cell.id} 
+                  pyodideState={pyodideState} 
+                  onExecute={executePythonCode} 
+                />
              ))}
           </article>
           
