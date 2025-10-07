@@ -1,15 +1,20 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import toast from 'react-hot-toast';
+import Editor from 'react-simple-code-editor';
 import Button from '../components/Button';
-import { getLessonBySlug } from '../services/lessons.service';
+import { getLessonBySlug, getRawLessonBySlug, updateRawLessonBySlug } from '../services/lessons.service';
 import { completeLesson, getLessonNavigation } from '../services/courses.service';
 import { Lesson, TextCell } from '../types/lessons';
 import LessonPageSkeleton from '../components/LessonPageSkeleton';
 import Card from '../components/Card';
 import CellRenderer from '../components/CellRenderer';
+import { useAuth } from '../contexts/AuthContext';
 
 // To avoid TypeScript errors since Pyodide is loaded from CDN script tags
 // FIX: Updated the type declaration for `loadPyodide` to accept an optional configuration object, which is required for specifying the `indexURL`. This resolves the error on line 36.
 declare const loadPyodide: (config?: { indexURL: string }) => Promise<any>;
+declare const Prism: any;
+
 
 const ChevronRightIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -18,12 +23,19 @@ const ChevronRightIcon = () => (
 );
 
 const LessonPage = () => {
+  const { user } = useAuth();
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [isLoadingLesson, setIsLoadingLesson] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
   const [navigation, setNavigation] = useState<{ previous: string | null; next: string | null }>({ previous: null, next: null });
+
+  // --- Edit Mode State ---
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [lessonText, setLessonText] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isStartingEdit, setIsStartingEdit] = useState(false);
 
   // --- Pyodide State Management ---
   const pyodideRef = useRef<any>(null);
@@ -107,6 +119,7 @@ const LessonPage = () => {
   useEffect(() => {
     const handleHashChange = () => {
       window.scrollTo(0, 0);
+      setIsEditMode(false); // Exit edit mode on navigation
       fetchLesson();
     };
 
@@ -126,7 +139,7 @@ const LessonPage = () => {
   }, [lesson]);
 
   useEffect(() => {
-    if (!lesson) return;
+    if (!lesson || isEditMode) return;
 
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
@@ -153,7 +166,7 @@ const LessonPage = () => {
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [tableOfContents, lesson]);
+  }, [tableOfContents, lesson, isEditMode]);
 
   const handleTocClick = (e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
     e.preventDefault();
@@ -185,11 +198,48 @@ const LessonPage = () => {
         }
     } catch (err) {
         console.error("Failed to complete lesson:", err);
-        // In a real app, show a toast notification to the user
+        toast.error('Could not complete lesson. Please try again.');
     } finally {
         setIsCompleting(false);
     }
   };
+
+  const handleEdit = async () => {
+    if (!lesson) return;
+    setIsStartingEdit(true);
+    try {
+        const rawText = await getRawLessonBySlug(lesson.slug);
+        setLessonText(rawText);
+        setIsEditMode(true);
+    } catch (error) {
+        toast.error('Failed to load lesson content for editing.');
+        console.error(error);
+    } finally {
+        setIsStartingEdit(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsEditMode(false);
+    setLessonText('');
+  };
+
+  const handleSave = async () => {
+    if (!lesson) return;
+    setIsSaving(true);
+    try {
+        await updateRawLessonBySlug(lesson.slug, lessonText);
+        toast.success('Lesson saved successfully!');
+        setIsEditMode(false);
+        await fetchLesson(); // Reload the lesson to see changes
+    } catch (error) {
+        toast.error('Syntax error in file. Check the format.');
+        console.error(error);
+    } finally {
+        setIsSaving(false);
+    }
+  };
+
 
   const pageIsLoading = isLoadingLesson || pyodideState === 'loading' || pyodideState === 'idle';
 
@@ -250,53 +300,86 @@ const LessonPage = () => {
         </aside>
 
         <main className="lg:col-span-9">
-          <div>
-            <nav className="flex items-center text-sm font-medium text-gray-500 dark:text-gray-400 mb-2 flex-wrap">
-              {lesson.breadcrumbs.map((crumb, index) => (
-                  <React.Fragment key={crumb.href}>
-                      <a href={crumb.href} onClick={(e) => { e.preventDefault(); window.location.hash = crumb.href; }} className="hover:text-gray-700 dark:hover:text-gray-200">{crumb.title}</a>
-                      <ChevronRightIcon />
-                  </React.Fragment>
-              ))}
-              <span className="text-gray-700 dark:text-gray-200">{lesson.title}</span>
-            </nav>
-            <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
-              {lesson.title}
-            </h1>
+          <div className="flex justify-between items-start">
+            <div>
+                <nav className="flex items-center text-sm font-medium text-gray-500 dark:text-gray-400 mb-2 flex-wrap">
+                {lesson.breadcrumbs.map((crumb, index) => (
+                    <React.Fragment key={crumb.href}>
+                        <a href={crumb.href} onClick={(e) => { e.preventDefault(); window.location.hash = crumb.href; }} className="hover:text-gray-700 dark:hover:text-gray-200">{crumb.title}</a>
+                        <ChevronRightIcon />
+                    </React.Fragment>
+                ))}
+                <span className="text-gray-700 dark:text-gray-200">{lesson.title}</span>
+                </nav>
+                <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+                {lesson.title}
+                </h1>
+            </div>
+            {user?.role === 'admin' && !isEditMode && (
+                <Button variant="secondary" onClick={handleEdit} loading={isStartingEdit} className="flex-shrink-0 ml-4 mt-1">
+                    Edit Lesson
+                </Button>
+            )}
           </div>
           
-          <article className="mt-8 prose prose-lg dark:prose-invert max-w-none prose-h2:font-bold prose-h2:text-2xl prose-h2:mb-4 prose-h2:mt-10 prose-p:leading-relaxed prose-li:my-2 prose-a:text-indigo-600 dark:prose-a:text-indigo-400 prose-a:font-semibold hover:prose-a:text-indigo-500 prose-code:bg-gray-100 prose-code:dark:bg-gray-800 prose-code:p-1 prose-code:rounded prose-code:font-mono prose-code:text-sm">
-             {lesson.cells.map(cell => (
-                <CellRenderer 
-                  cell={cell} 
-                  key={cell.id} 
-                  pyodideState={pyodideState} 
-                  onExecute={executePythonCode} 
-                />
-             ))}
-          </article>
-          
-          <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
-            <Button 
-              variant="secondary"
-              onClick={() => { if(navigation.previous) window.location.hash = `#/lesson?slug=${navigation.previous}` }}
-              disabled={!navigation.previous}
-            >
-                <span aria-hidden="true" className="mr-2">←</span> Previous Lesson
-            </Button>
-            <Button 
-              variant="primary" 
-              onClick={handleCompleteLesson} 
-              loading={isCompleting}
-            >
-                {navigation.next ? 'Finish and Continue' : 'Finish Course'}
-                <span aria-hidden="true" className="ml-2">→</span>
-            </Button>
-          </div>
+          {isEditMode ? (
+            <div className="mt-8">
+                <div className="relative text-sm font-mono border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden shadow-lg">
+                    <Editor
+                        value={lessonText}
+                        onValueChange={text => setLessonText(text)}
+                        highlight={code => Prism.highlight(code, Prism.languages.yaml, 'yaml')}
+                        padding={16}
+                        className="bg-[#2d2d2d] text-gray-100 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-inset min-h-[70vh]"
+                        style={{
+                            fontFamily: '"Fira code", "Fira Mono", monospace',
+                            fontSize: 14,
+                            outline: 0,
+                        }}
+                    />
+                </div>
+                <div className="mt-6 flex justify-end gap-4">
+                    <Button variant="secondary" onClick={handleCancel} disabled={isSaving}>Cancel</Button>
+                    <Button variant="primary" onClick={handleSave} loading={isSaving}>Save Changes</Button>
+                </div>
+            </div>
+          ) : (
+            <>
+                <article className="mt-8 prose prose-lg dark:prose-invert max-w-none prose-h2:font-bold prose-h2:text-2xl prose-h2:mb-4 prose-h2:mt-10 prose-p:leading-relaxed prose-li:my-2 prose-a:text-indigo-600 dark:prose-a:text-indigo-400 prose-a:font-semibold hover:prose-a:text-indigo-500 prose-code:bg-gray-100 prose-code:dark:bg-gray-800 prose-code:p-1 prose-code:rounded prose-code:font-mono prose-code:text-sm">
+                {lesson.cells.map(cell => (
+                    <CellRenderer 
+                    cell={cell} 
+                    key={cell.id} 
+                    pyodideState={pyodideState} 
+                    onExecute={executePythonCode} 
+                    />
+                ))}
+                </article>
+                
+                <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <Button 
+                    variant="secondary"
+                    onClick={() => { if(navigation.previous) window.location.hash = `#/lesson?slug=${navigation.previous}` }}
+                    disabled={!navigation.previous}
+                >
+                    <span aria-hidden="true" className="mr-2">←</span> Previous Lesson
+                </Button>
+                <Button 
+                    variant="primary" 
+                    onClick={handleCompleteLesson} 
+                    loading={isCompleting}
+                >
+                    {navigation.next ? 'Finish and Continue' : 'Finish Course'}
+                    <span aria-hidden="true" className="ml-2">→</span>
+                </Button>
+                </div>
+            </>
+          )}
         </main>
       </div>
     </div>
   );
 };
 
+// FIX: Removed duplicate 'export' keyword to fix syntax error.
 export default LessonPage;

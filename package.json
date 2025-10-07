@@ -13,8 +13,6 @@
     "remark-gfm": "4.0.0",
     "react-simple-code-editor": "0.13.1",
     "zod": "3.22.4",
-    "framer-motion": "11.2.10",
-    "react-hot-toast": "2.4.1",
     "axios": "1.6.8"
   },
   "devDependencies": {
