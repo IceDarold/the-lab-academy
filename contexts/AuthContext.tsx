@@ -172,10 +172,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const result = await registerService(fullName, email, password);
 
       if (result.status === 'pending_confirmation') {
-        clearSession();
-        throw new Error(
-          'Registration successful. Please confirm your email address before signing in.'
-        );
+        return { status: 'pending_confirmation' as const };
       }
 
       persistAuthTokens(result.tokens);
@@ -190,6 +187,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         refreshToken: result.tokens.refreshToken ?? null,
         tokenType: result.tokens.tokenType ?? 'bearer',
       });
+
+      return { status: 'authenticated' as const, tokens: result.tokens };
     } catch (error) {
       console.error('AuthContext register error:', error);
       // Re-throw the error so the UI component can handle it

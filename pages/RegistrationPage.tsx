@@ -5,11 +5,13 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import Card from '../components/Card';
 import SocialLoginButton from '../components/SocialLoginButton';
+import Modal from '../components/Modal';
 import { useAuth } from '../contexts/AuthContext';
 import { RegisterSchema, RegisterData } from '../lib/validators/auth';
 
 const RegistrationPage = () => {
   const [apiError, setApiError] = useState<string | null>(null);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const { register: registerUser } = useAuth();
 
   const {
@@ -23,8 +25,11 @@ const RegistrationPage = () => {
   const onSubmit = async (data: RegisterData) => {
     setApiError(null);
     try {
-      await registerUser(data.fullName, data.email, data.password);
-      // Redirect is handled within the register function in AuthContext
+      const result = await registerUser(data.fullName, data.email, data.password);
+      if (result.status === 'pending_confirmation') {
+        setShowConfirmationModal(true);
+      }
+      // For authenticated, redirect is handled in AuthContext
     } catch (err) {
       setApiError((err as Error).message);
     }
@@ -153,6 +158,24 @@ const RegistrationPage = () => {
                 </div>
             </Card>
         </div>
+        <Modal isOpen={showConfirmationModal} onClose={() => setShowConfirmationModal(false)}>
+            <div className="text-center">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 dark:bg-indigo-900 mb-4">
+                    <svg className="h-6 w-6 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                    Подтверждение почты
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                    Пожалуйста, подтвердите свою почту, чтобы завершить регистрацию. Проверьте свою электронную почту и следуйте инструкциям в письме.
+                </p>
+                <Button variant="primary" onClick={() => setShowConfirmationModal(false)}>
+                    OK
+                </Button>
+            </div>
+        </Modal>
     </div>
   );
 };
