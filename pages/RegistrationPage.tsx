@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Card from '../components/Card';
@@ -42,16 +43,25 @@ const RegistrationPage = () => {
 
   const handleEmailBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const email = e.target.value;
-    if (email && !errors.email) {
-      try {
-        const exists = await checkEmail(email);
-        if (exists) {
-          setEmailExistsError('This email is already registered');
-        } else {
+    if (email) {
+      // First check if email format is valid
+      const emailSchema = z.string().email();
+      const isValidFormat = emailSchema.safeParse(email).success;
+
+      if (isValidFormat) {
+        try {
+          const exists = await checkEmail(email);
+          if (exists) {
+            setEmailExistsError('This email is already registered');
+          } else {
+            setEmailExistsError(null);
+          }
+        } catch (error) {
+          // If error, assume not exists to allow registration
           setEmailExistsError(null);
         }
-      } catch (error) {
-        // If error, assume not exists to allow registration
+      } else {
+        // If format is invalid, don't check existence
         setEmailExistsError(null);
       }
     }
