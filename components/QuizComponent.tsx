@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import Card from './Card';
 import Button from './Button';
 import { checkQuizAnswer } from '../services/quiz.service';
+import { useAnalytics } from '../src/hooks/useAnalytics';
 
 export interface QuizAnswerOption {
   id?: string;
@@ -15,6 +16,7 @@ interface QuizComponentProps {
   question: string;
   answers: QuizAnswerOption[];
   explanation?: string;
+  lessonSlug: string;
 }
 
 const CheckIcon = () => (
@@ -37,7 +39,8 @@ const XMarkIcon = () => (
   </svg>
 );
 
-const QuizComponent: React.FC<QuizComponentProps> = ({ questionId, question, answers, explanation }) => {
+const QuizComponent: React.FC<QuizComponentProps> = ({ questionId, question, answers, explanation, lessonSlug }) => {
+  const { trackEvent } = useAnalytics();
   const [selectedAnswerIndex, setSelectedAnswerIndex] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
@@ -76,6 +79,7 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ questionId, question, ans
         const response = await checkQuizAnswer(questionId, selected.id);
         setIsCorrect(response.is_correct);
         setCorrectAnswerId(response.correct_answer_id ?? null);
+        trackEvent('QUIZ_ATTEMPT', { lesson_slug: lessonSlug, question_id: questionId, is_correct: response.is_correct });
       } catch (error) {
         console.error('Quiz answer verification failed', error);
         toast.error('Could not verify your answer. Please try again.');
@@ -92,6 +96,7 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ questionId, question, ans
     setCorrectAnswerId(
       selected.isCorrect ? selected.id ?? null : answersWithFallbackIds.find((a) => a.isCorrect)?.id ?? null
     );
+    trackEvent('QUIZ_ATTEMPT', { lesson_slug: lessonSlug, question_id: questionId, is_correct: Boolean(selected.isCorrect) });
     setIsSubmitted(true);
   };
 

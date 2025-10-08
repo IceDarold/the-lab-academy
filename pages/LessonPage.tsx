@@ -9,6 +9,7 @@ import LessonPageSkeleton from '../components/LessonPageSkeleton';
 import Card from '../components/Card';
 import CellRenderer from '../components/CellRenderer';
 import { useAuth } from '../contexts/AuthContext';
+import { useAnalytics } from '../src/hooks/useAnalytics';
 
 // To avoid TypeScript errors since Pyodide is loaded from CDN script tags
 // FIX: Updated the type declaration for `loadPyodide` to accept an optional configuration object, which is required for specifying the `indexURL`. This resolves the error on line 36.
@@ -24,6 +25,7 @@ const ChevronRightIcon = () => (
 
 const LessonPage = () => {
   const { user } = useAuth();
+  const { trackEvent } = useAnalytics();
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [isLoadingLesson, setIsLoadingLesson] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -249,6 +251,8 @@ const LessonPage = () => {
       if (!courseSlug) {
         throw new Error('Course context not found.');
       }
+
+      trackEvent('LESSON_COMPLETED', { lesson_slug: lesson.slug, course_slug: courseSlug });
 
       if (typeof updatedProgress === 'number') {
         toast.success(`Course progress: ${Math.round(updatedProgress)}%`);

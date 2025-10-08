@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Editor from 'react-simple-code-editor';
 import Button from './Button';
 import Card from './Card';
+import { useAnalytics } from '../src/hooks/useAnalytics';
 
 // To avoid TypeScript errors since Prism is loaded from a CDN script tag
 declare const Prism: any;
@@ -10,6 +11,7 @@ interface InteractiveCodeRunnerProps {
   initialCode: string;
   pyodideState: 'idle' | 'loading' | 'ready' | 'error';
   onExecute: (code: string) => Promise<string[]>;
+  lessonSlug: string;
 }
 
 // Heroicon SVGs for buttons
@@ -26,10 +28,11 @@ const PlayIcon = () => (
 );
 
 
-const InteractiveCodeRunner: React.FC<InteractiveCodeRunnerProps> = ({ initialCode, pyodideState, onExecute }) => {
+const InteractiveCodeRunner: React.FC<InteractiveCodeRunnerProps> = ({ initialCode, pyodideState, onExecute, lessonSlug }) => {
     const [code, setCode] = useState(initialCode);
     const [isExecuting, setIsExecuting] = useState<boolean>(false);
     const [output, setOutput] = useState<string[]>([]);
+    const { trackEvent } = useAnalytics();
 
     useEffect(() => {
         setCode(initialCode);
@@ -39,6 +42,7 @@ const InteractiveCodeRunner: React.FC<InteractiveCodeRunnerProps> = ({ initialCo
     const handleRun = async () => {
         if (pyodideState !== 'ready') return;
 
+        trackEvent('CODE_EXECUTION', { lesson_slug: lessonSlug, character_count: code.length });
         setIsExecuting(true);
         setOutput([]);
 

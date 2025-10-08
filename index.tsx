@@ -18,6 +18,7 @@ import ProfilePage from './pages/ProfilePage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import PageTransitionWrapper from './components/PageTransitionWrapper';
+import AnalyticsTracker from './components/AnalyticsTracker';
 
 const App = () => {
   const [route, setRoute] = useState(window.location.hash);
