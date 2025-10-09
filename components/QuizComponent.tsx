@@ -16,7 +16,7 @@ interface QuizComponentProps {
   question: string;
   answers: QuizAnswerOption[];
   explanation?: string;
-  lessonSlug: string;
+  lessonSlug?: string;
 }
 
 const CheckIcon = () => (
@@ -77,14 +77,27 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ questionId, question, ans
       setIsChecking(true);
       try {
         const response = await checkQuizAnswer(questionId, selected.id);
-        setIsCorrect(response.is_correct);
-        setCorrectAnswerId(response.correct_answer_id ?? null);
-        trackEvent('QUIZ_ATTEMPT', { lesson_slug: lessonSlug, question_id: questionId, is_correct: response.is_correct });
+        if (response?.answer && typeof response.answer.is_correct === 'boolean') {
+          setIsCorrect(response.answer.is_correct);
+          setCorrectAnswerId(response.answer.correct_answer_id ?? null);
+          if (lessonSlug) trackEvent('QUIZ_ATTEMPT', { lesson_slug: lessonSlug, question_id: questionId, is_correct: response.answer.is_correct });
+        } else {
+          // Fallback to client-side validation if API response is invalid
+          setIsCorrect(Boolean(selected.isCorrect));
+          setCorrectAnswerId(
+            selected.isCorrect ? selected.id ?? null : answersWithFallbackIds.find((a) => a.isCorrect)?.id ?? null
+          );
+          if (lessonSlug) trackEvent('QUIZ_ATTEMPT', { lesson_slug: lessonSlug, question_id: questionId, is_correct: Boolean(selected.isCorrect) });
+        }
       } catch (error) {
         console.error('Quiz answer verification failed', error);
         toast.error('Could not verify your answer. Please try again.');
-        setIsCorrect(null);
-        setCorrectAnswerId(null);
+        // Fallback to client-side validation on error
+        setIsCorrect(Boolean(selected.isCorrect));
+        setCorrectAnswerId(
+          selected.isCorrect ? selected.id ?? null : answersWithFallbackIds.find((a) => a.isCorrect)?.id ?? null
+        );
+        if (lessonSlug) trackEvent('QUIZ_ATTEMPT', { lesson_slug: lessonSlug, question_id: questionId, is_correct: Boolean(selected.isCorrect) });
       } finally {
         setIsChecking(false);
         setIsSubmitted(true);
@@ -96,7 +109,7 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ questionId, question, ans
     setCorrectAnswerId(
       selected.isCorrect ? selected.id ?? null : answersWithFallbackIds.find((a) => a.isCorrect)?.id ?? null
     );
-    trackEvent('QUIZ_ATTEMPT', { lesson_slug: lessonSlug, question_id: questionId, is_correct: Boolean(selected.isCorrect) });
+    if (lessonSlug) trackEvent('QUIZ_ATTEMPT', { lesson_slug: lessonSlug, question_id: questionId, is_correct: Boolean(selected.isCorrect) });
     setIsSubmitted(true);
   };
 
@@ -136,6 +149,9 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ questionId, question, ans
     <Card className="!p-0 overflow-hidden">
       <div className="p-6">
         <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">{question}</p>
+        {explanation && (
+          <p className="mt-2 text-gray-700 dark:text-gray-300">{explanation}</p>
+        )}
         <div className="mt-4">
           {answersWithFallbackIds.map((answer, index) => (
             <button
@@ -174,8 +190,8 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ questionId, question, ans
               isCorrect ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'
             }`}
           >
-            {isCorrect ? <CheckIcon /> : <XMarkIcon />}
-            <span className="ml-2">{isCorrect ? 'Correct!' : 'Not quite.'}</span>
+            
+            {isCorrect ? 'Correct!' : 'Not quite.'}
           </h3>
           {explanation && (
             <p className="mt-2 text-gray-700 dark:text-gray-300">{explanation}</p>

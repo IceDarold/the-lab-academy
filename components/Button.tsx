@@ -59,9 +59,13 @@ const Button: React.FC<ButtonProps> = ({
           </svg>
         </div>
       )}
-      <span className={loading ? 'opacity-0' : 'opacity-100'}>
-        {children}
-      </span>
+      {loading ? (
+        <span className="opacity-0">
+          {children}
+        </span>
+      ) : (
+        children
+      )}
     </button>
   );
 };
