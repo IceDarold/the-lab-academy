@@ -1,10 +1,19 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Cell } from '../types/lessons';
-import InteractiveCodeRunner from './InteractiveCodeRunner';
-import QuizComponent from './QuizComponent';
 import Card from './Card';
+
+// Lazy load heavy components
+const InteractiveCodeRunner = React.lazy(() => import('./InteractiveCodeRunner'));
+const QuizComponent = React.lazy(() => import('./QuizComponent'));
+
+// Loading fallback component
+const ComponentLoader = () => (
+  <div className="flex items-center justify-center p-8">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+  </div>
+);
 
 interface CellRendererProps {
   cell: Cell;
@@ -40,23 +49,27 @@ const CellRenderer: React.FC<CellRendererProps> = ({ cell, pyodideState, onExecu
     case 'code':
       return (
         <div id={cell.id} className="not-prose my-12">
-            <InteractiveCodeRunner 
-                initialCode={cell.initialCode}
-                pyodideState={pyodideState}
-                onExecute={onExecute}
-            />
+            <Suspense fallback={<ComponentLoader />}>
+                <InteractiveCodeRunner
+                    initialCode={cell.initialCode}
+                    pyodideState={pyodideState}
+                    onExecute={onExecute}
+                />
+            </Suspense>
         </div>
       );
       
     case 'quiz':
       return (
         <div id={cell.id} className="not-prose my-12">
-            <QuizComponent
-                questionId={cell.questionId}
-                question={cell.question}
-                answers={cell.answers}
-                explanation={cell.explanation}
-            />
+            <Suspense fallback={<ComponentLoader />}>
+                <QuizComponent
+                    questionId={cell.questionId}
+                    question={cell.question}
+                    answers={cell.answers}
+                    explanation={cell.explanation}
+                />
+            </Suspense>
         </div>
       );
 
@@ -71,11 +84,13 @@ const CellRenderer: React.FC<CellRendererProps> = ({ cell, pyodideState, onExecu
                     <div>
                         <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">{cell.title || 'Challenge'}</h3>
                         <p className="mb-4 text-gray-700 dark:text-gray-300">{cell.instructions}</p>
-                        <InteractiveCodeRunner 
-                            initialCode={cell.initialCode}
-                            pyodideState={pyodideState}
-                            onExecute={onExecute}
-                        />
+                        <Suspense fallback={<ComponentLoader />}>
+                            <InteractiveCodeRunner
+                                initialCode={cell.initialCode}
+                                pyodideState={pyodideState}
+                                onExecute={onExecute}
+                            />
+                        </Suspense>
                     </div>
                 </div>
             </Card>

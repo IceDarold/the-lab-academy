@@ -23,7 +23,7 @@ const PageTransitionWrapper: React.FC<{ children: React.ReactNode }> = ({ childr
       animate="in"
       exit="out"
       variants={pageVariants}
-      transition={{ duration: 0.5, ease: 'easeInOut' }}
+      transition={{ duration: 0.2, ease: 'easeInOut' }}
     >
       {children}
     </motion.div>

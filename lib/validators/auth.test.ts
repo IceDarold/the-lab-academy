@@ -62,6 +62,54 @@ describe('Auth Validators', () => {
         expect(data.password).toBe('password123')
       }
     })
+
+    // Comprehensive email validation tests
+    describe('Email validation edge cases', () => {
+      const validEmails = [
+        'user@example.com',
+        'user.name@example.com',
+        'user+tag@example.com',
+        'user_name@example.com',
+        'user-name@example.com',
+        'user123@example.com',
+        '123user@example.com',
+        'user@subdomain.example.com',
+        'user@example.co.uk',
+        'user@example.io',
+        'user@example.travel',
+        'user@example.museum',
+        'akonukhov@isl.cy',
+        'test.email+tag@example.com',
+      ]
+
+      const invalidEmails = [
+        'invalid-email',
+        '@example.com',
+        'user@',
+        'user@@example.com',
+        'user example.com',
+        'user@.com',
+        'user@exam ple.com',
+        'user@exam ple.com',
+        'user@exam\tple.com',
+        'user@exam\nple.com',
+      ]
+
+      validEmails.forEach(email => {
+        it(`should accept valid email: ${email}`, () => {
+          const result = LoginSchema.safeParse({ email, password: 'password123' })
+          expect(result.success).toBe(true)
+        })
+      })
+
+      invalidEmails.forEach(email => {
+        it(`should reject invalid email: ${email}`, () => {
+          const result = LoginSchema.safeParse({ email, password: 'password123' })
+          expect(result.success).toBe(false)
+          expect(result.error?.issues[0]?.message).toBe('Invalid email format')
+        })
+      })
+    })
   })
 
   describe('RegisterSchema', () => {
@@ -144,6 +192,55 @@ describe('Auth Validators', () => {
         expect(data.fullName).toBe('John Doe')
         expect(data.terms).toBe(true)
       }
+    })
+
+    it('should reject fullName containing "test"', () => {
+      const invalidData = {
+        fullName: 'test user',
+        email: 'test@example.com',
+        password: 'password123',
+        terms: true,
+      }
+
+      const result = RegisterSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+      expect(result.error?.issues[0]?.message).toBe('Full name cannot contain \'test\'')
+    })
+
+    it('should reject fullName containing "Test" (case insensitive)', () => {
+      const invalidData = {
+        fullName: 'Test User',
+        email: 'test@example.com',
+        password: 'password123',
+        terms: true,
+      }
+
+      const result = RegisterSchema.safeParse(invalidData)
+      expect(result.success).toBe(false)
+      expect(result.error?.issues[0]?.message).toBe('Full name cannot contain \'test\'')
+    })
+
+    it('should reject fullName containing "test" in any case', () => {
+      const testCases = [
+        'TEST User',
+        'tEsT User',
+        'testuser',
+        'User test',
+        'TeSt',
+      ]
+
+      testCases.forEach(fullName => {
+        const invalidData = {
+          fullName,
+          email: 'test@example.com',
+          password: 'password123',
+          terms: true,
+        }
+
+        const result = RegisterSchema.safeParse(invalidData)
+        expect(result.success).toBe(false)
+        expect(result.error?.issues[0]?.message).toBe('Full name cannot contain \'test\'')
+      })
     })
   })
 

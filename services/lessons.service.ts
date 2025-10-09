@@ -1,6 +1,47 @@
 import api from '../lib/api';
 import { Cell, Lesson, QuizAnswer } from '../types/lessons';
 
+const isDebug = import.meta.env.VITE_MODE === 'DEBUG';
+
+const mockLesson: Lesson = {
+  id: '1',
+  lessonId: '1',
+  slug: 'what-is-react',
+  title: 'What is React?',
+  courseSlug: 'intro-to-react',
+  metadata: {},
+  breadcrumbs: [
+    { title: 'Introduction to React', href: '#/dashboard/course/intro-to-react' },
+    { title: 'What is React?', href: '#/lesson/what-is-react' },
+  ],
+  cells: [
+    {
+      id: '1',
+      type: 'text',
+      content: 'React is a JavaScript library for building user interfaces.',
+      title: 'Introduction',
+    },
+    {
+      id: '2',
+      type: 'code',
+      initialCode: 'function Hello() {\n  return <h1>Hello World!</h1>;\n}',
+      language: 'javascript',
+    },
+    {
+      id: '3',
+      type: 'quiz',
+      questionId: '1',
+      question: 'What is React?',
+      answers: [
+        { id: '1', text: 'A JavaScript library', isCorrect: true },
+        { id: '2', text: 'A programming language', isCorrect: false },
+        { id: '3', text: 'A database', isCorrect: false },
+      ],
+      explanation: 'React is a JavaScript library for building user interfaces.',
+    },
+  ],
+};
+
 const mapQuizAnswers = (answers: any[]): QuizAnswer[] =>
   answers.map((answer: any) => ({
     id: answer.answer_id ?? answer.id,
@@ -50,6 +91,10 @@ const mapCell = (cell: any, index: number): Cell => {
 };
 
 export const getLessonBySlug = async (slug: string): Promise<Lesson> => {
+  if (isDebug) {
+    return mockLesson;
+  }
+
   const response = await api.get(`/v1/lessons/${slug}`);
   const data = response.data;
 

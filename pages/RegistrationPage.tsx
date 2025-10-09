@@ -28,11 +28,9 @@ const RegistrationPage = () => {
   const { onChange: emailOnChange, ...emailRest } = register('email');
 
   React.useEffect(() => {
-    console.log('Form errors:', errors);
   }, [errors]);
 
   const onSubmit = async (data: RegisterData) => {
-    console.log('Form submitted with data:', data);
     if (emailExistsError) {
       return;
     }
@@ -44,7 +42,6 @@ const RegistrationPage = () => {
       }
       // For authenticated, redirect is handled in AuthContext
     } catch (err) {
-      console.log('Registration error:', err);
       setApiError((err as Error).message);
     }
   };
@@ -52,7 +49,6 @@ const RegistrationPage = () => {
   const handleEmailBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const email = e.target.value;
     if (email) {
-      console.log('Email blur:', email);
       try {
         const exists = await checkEmail(email);
         if (exists) {
@@ -224,10 +220,10 @@ const RegistrationPage = () => {
                     </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                    Подтверждение почты
+                    Email Confirmation
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                    Пожалуйста, подтвердите свою почту, чтобы завершить регистрацию. Проверьте свою электронную почту и следуйте инструкциям в письме.
+                    Please confirm your email to complete registration. Check your email and follow the instructions in the message.
                 </p>
                 <Button variant="primary" onClick={() => setShowConfirmationModal(false)}>
                     OK

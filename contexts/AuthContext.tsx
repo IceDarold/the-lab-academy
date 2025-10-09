@@ -91,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const currentUser = await getMe();
         setUser(currentUser);
       } catch (error) {
-        console.error('Session check failed, token might be invalid:', error);
+        
         clearSession();
       } finally {
         setIsLoading(false);
@@ -171,7 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         tokenType: tokens.tokenType ?? 'bearer',
       });
     } catch (error) {
-      console.error('AuthContext login error:', error);
+      
       // Re-throw the error so the UI component can handle it
       throw new Error(extractErrorMessage(error));
     }
@@ -206,7 +206,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { status: 'authenticated' as const, tokens: result.tokens };
     } catch (error) {
-      console.error('AuthContext register error:', error);
+      
       // Re-throw the error so the UI component can handle it
       throw new Error(extractErrorMessage(error));
     }
@@ -215,7 +215,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       return await checkEmailService(email);
     } catch (error) {
-      console.error('AuthContext checkEmail error:', error);
+      
       // If error, assume exists to be safe
       return true;
     }

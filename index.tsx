@@ -1,28 +1,34 @@
 import './index.css';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import RegistrationPage from './pages/RegistrationPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import CoursesPage from './pages/CoursesPage';
-import DashboardPage from './pages/DashboardPage';
-import CourseDashboardPage from './pages/CourseDashboardPage';
-import LessonPage from './pages/LessonPage';
-import ProfilePage from './pages/ProfilePage';
+import FullScreenLoader from './components/FullScreenLoader';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import PageTransitionWrapper from './components/PageTransitionWrapper';
 import AnalyticsTracker from './components/AnalyticsTracker';
+import { Analytics } from '@vercel/analytics/react';
+import ErrorBoundary from './components/ErrorBoundary';
+
+// Lazy load page components
+const LandingPage = React.lazy(() => import('./pages/LandingPage'));
+const LoginPage = React.lazy(() => import('./pages/LoginPage'));
+const RegistrationPage = React.lazy(() => import('./pages/RegistrationPage'));
+const ForgotPasswordPage = React.lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = React.lazy(() => import('./pages/ResetPasswordPage'));
+const CoursesPage = React.lazy(() => import('./pages/CoursesPage'));
+const DashboardPage = React.lazy(() => import('./pages/DashboardPage'));
+const CourseDashboardPage = React.lazy(() => import('./pages/CourseDashboardPage'));
+const LessonPage = React.lazy(() => import('./pages/LessonPage'));
+const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
+const AdminPage = React.lazy(() => import('./pages/AdminPage'));
 
 const App = () => {
   const [route, setRoute] = useState(window.location.hash);
   const { isAuthenticated, isLoading } = useAuth();
+  const isDebug = import.meta.env.VITE_MODE === 'DEBUG';
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -64,50 +70,71 @@ const App = () => {
   const renderPage = () => {
     // Handle routes with potential parameters first
     if (route.startsWith('#/dashboard/course')) {
-        return <ProtectedRoute><CourseDashboardPage /></ProtectedRoute>;
+        const coursePage = <ErrorBoundary><CourseDashboardPage /></ErrorBoundary>;
+        return isDebug ? coursePage : <ProtectedRoute>{coursePage}</ProtectedRoute>;
     }
     if (route.startsWith('#/lesson')) {
-        return <ProtectedRoute><LessonPage /></ProtectedRoute>;
+        const lessonPage = <ErrorBoundary><LessonPage /></ErrorBoundary>;
+        return isDebug ? lessonPage : <ProtectedRoute>{lessonPage}</ProtectedRoute>;
     }
     if (route.startsWith('#/dashboard/profile')) {
-        return <ProtectedRoute><ProfilePage /></ProtectedRoute>;
+        return <ProtectedRoute><ErrorBoundary><ProfilePage /></ErrorBoundary></ProtectedRoute>;
+    }
+    if (route.startsWith('#/admin')) {
+        if (route === '#/admin') {
+            window.location.hash = '#/admin/content';
+            return null;
+        }
+        const adminPage = <ErrorBoundary><AdminPage activePath={route} onNavigate={(path) => window.location.hash = path} /></ErrorBoundary>;
+        return isDebug ? adminPage : <ProtectedRoute>{adminPage}</ProtectedRoute>;
     }
 
     // Handle static routes
     switch (route) {
       case '#/login':
-        return <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"><LoginPage /></div>;
+        return <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"><ErrorBoundary><LoginPage /></ErrorBoundary></div>;
       case '#/register':
-        return <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"><RegistrationPage /></div>;
+        return <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"><ErrorBoundary><RegistrationPage /></ErrorBoundary></div>;
       case '#/forgot-password':
-        return <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"><ForgotPasswordPage /></div>;
+        return <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"><ErrorBoundary><ForgotPasswordPage /></ErrorBoundary></div>;
       case '#/reset-password':
-        return <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"><ResetPasswordPage /></div>;
+        return <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"><ErrorBoundary><ResetPasswordPage /></ErrorBoundary></div>;
       case '#/courses':
-        return <CoursesPage />;
+        return <ErrorBoundary><CoursesPage /></ErrorBoundary>;
       case '#/dashboard':
-        return <ProtectedRoute><DashboardPage /></ProtectedRoute>;
+        const dashboardPage = <ErrorBoundary><DashboardPage /></ErrorBoundary>;
+        return isDebug ? dashboardPage : <ProtectedRoute>{dashboardPage}</ProtectedRoute>;
       case '#/':
       case '':
       default:
-        return <LandingPage />;
+        return <ErrorBoundary><LandingPage /></ErrorBoundary>;
     }
   };
 
   const isAuthPage = route === '#/login' || route === '#/register';
+  const isAdminRoute = route.startsWith('#/admin');
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 antialiased">
       <Toaster position="top-right" />
-      {!isAuthPage && <Navbar />}
+      <Analytics />
+      {!isAuthPage && !isAdminRoute && <Navbar />}
       <main className="flex-grow">
-        <AnimatePresence mode="wait">
-          <PageTransitionWrapper key={route}>
-            {renderPage()}
-          </PageTransitionWrapper>
+        <AnimatePresence>
+          <motion.div
+            key={route}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Suspense fallback={<FullScreenLoader />}>
+              {renderPage()}
+            </Suspense>
+          </motion.div>
         </AnimatePresence>
       </main>
-      {!isAuthPage && <Footer />}
+      {!isAuthPage && !isAdminRoute && <Footer />}
     </div>
   );
 };
@@ -116,8 +143,10 @@ const container = document.getElementById('root');
 if (container) {
   const root = createRoot(container);
   root.render(
-    <AuthProvider>
-      <App />
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }

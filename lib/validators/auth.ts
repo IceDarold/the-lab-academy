@@ -1,7 +1,9 @@
 import { z } from 'zod';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export const LoginSchema = z.object({
-  email: z.string().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, { message: 'Invalid email format' }),
+  email: z.string().regex(EMAIL_REGEX, { message: 'Invalid email format' }),
   password: z.string().min(1, { message: 'Password cannot be empty' }),
 });
 
@@ -10,13 +12,12 @@ export type LoginData = z.infer<typeof LoginSchema>;
 
 export const RegisterSchema = z.object({
   fullName: z.string().min(2, { message: 'Name must be at least 2 characters long' }),
-  email: z.string().regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/i, { message: 'Invalid email format' }).trim(),
+  email: z.string().regex(EMAIL_REGEX, { message: 'Invalid email format' }).trim(),
   password: z.string().min(8, { message: 'Password must be at least 8 characters long' }),
   terms: z.boolean().refine(val => val === true, {
     message: 'You must agree to the terms and privacy policy.',
   }),
 }).superRefine((val, ctx) => {
-  console.log("[Register.superRefine] got:", val);
   // пример кастомной доп-проверки:
   if (val.fullName.toLowerCase().includes("test")) {
     ctx.addIssue({
@@ -47,7 +48,7 @@ export const ChangePasswordSchema = z.object({
 export type ChangePasswordData = z.infer<typeof ChangePasswordSchema>;
 
 export const ForgotPasswordSchema = z.object({
-  email: z.string().refine((val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), { message: 'Invalid email format' }),
+  email: z.string().regex(EMAIL_REGEX, { message: 'Invalid email format' }),
 });
 
 export type ForgotPasswordData = z.infer<typeof ForgotPasswordSchema>;

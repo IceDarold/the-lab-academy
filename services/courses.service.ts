@@ -9,6 +9,85 @@ import {
   PublicCourseDetails,
 } from '../types/courses';
 
+const isDebug = import.meta.env.VITE_MODE === 'DEBUG';
+
+const mockCourses: CourseSummary[] = [
+  {
+    courseId: '1',
+    slug: 'intro-to-react',
+    title: 'Introduction to React',
+    description: 'Learn the basics of React framework',
+    coverImageUrl: 'https://via.placeholder.com/300x200?text=React',
+    progressPercent: 75,
+    status: 'in-progress',
+  },
+  {
+    courseId: '2',
+    slug: 'advanced-typescript',
+    title: 'Advanced TypeScript',
+    description: 'Master advanced TypeScript concepts',
+    coverImageUrl: 'https://via.placeholder.com/300x200?text=TypeScript',
+    progressPercent: 100,
+    status: 'completed',
+  },
+  {
+    courseId: '3',
+    slug: 'node-js-backend',
+    title: 'Node.js Backend Development',
+    description: 'Build scalable backend services',
+    coverImageUrl: 'https://via.placeholder.com/300x200?text=Node.js',
+    progressPercent: 0,
+    status: 'not_started',
+  },
+];
+
+const mockCourseDetails: Record<string, CourseDetails> = {
+  'intro-to-react': {
+    courseId: '1',
+    slug: 'intro-to-react',
+    title: 'Introduction to React',
+    description: 'Learn the basics of React framework',
+    coverImageUrl: 'https://via.placeholder.com/300x200?text=React',
+    overallProgressPercent: 75,
+    modules: [
+      {
+        title: 'Getting Started',
+        order: 1,
+        lessons: [
+          { lessonId: '1', slug: 'what-is-react', title: 'What is React?', order: 1, status: 'completed' },
+          { lessonId: '2', slug: 'jsx-basics', title: 'JSX Basics', order: 2, status: 'completed' },
+        ],
+      },
+      {
+        title: 'Components',
+        order: 2,
+        lessons: [
+          { lessonId: '3', slug: 'functional-components', title: 'Functional Components', order: 1, status: 'in-progress' },
+          { lessonId: '4', slug: 'props-state', title: 'Props and State', order: 2, status: 'not_started' },
+        ],
+      },
+    ],
+  },
+  'advanced-typescript': {
+    courseId: '2',
+    slug: 'advanced-typescript',
+    title: 'Advanced TypeScript',
+    description: 'Master advanced TypeScript concepts',
+    coverImageUrl: 'https://via.placeholder.com/300x200?text=TypeScript',
+    overallProgressPercent: 100,
+    modules: [
+      {
+        title: 'Advanced Types',
+        order: 1,
+        lessons: [
+          { lessonId: '5', slug: 'generics', title: 'Generics', order: 1, status: 'completed' },
+          { lessonId: '6', slug: 'conditional-types', title: 'Conditional Types', order: 2, status: 'completed' },
+        ],
+      },
+    ],
+  },
+};
+
 const normalizeStatus = (status?: string, progress?: number): CourseProgressStatus => {
   if (status === 'completed') {
     return 'completed';
@@ -33,6 +112,10 @@ const normalizeStatus = (status?: string, progress?: number): CourseProgressStat
 };
 
 export const getMyCourses = async (): Promise<CourseSummary[]> => {
+  if (isDebug) {
+    return mockCourses;
+  }
+
   const response = await api.get('/v1/dashboard/my-courses');
   const courses = Array.isArray(response.data) ? response.data : [];
 
@@ -67,6 +150,10 @@ const mapModule = (module: any): CourseModuleSummary => ({
 });
 
 export const getCourseDetails = async (slug: string): Promise<CourseDetails> => {
+  if (isDebug && mockCourseDetails[slug]) {
+    return mockCourseDetails[slug];
+  }
+
   const response = await api.get(`/v1/dashboard/courses/${slug}`);
   const data = response.data ?? {};
 
