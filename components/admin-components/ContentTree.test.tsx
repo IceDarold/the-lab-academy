@@ -13,7 +13,7 @@ vi.mock('./CreatePartDialog', () => ({
   default: ({ course, isOpen, onOpenChange }: any) => (
     <div data-testid="create-part-dialog" data-open={isOpen}>
       Part dialog for {course?.name}
-      <button onClick={() => onOpenChange(false)}>Close</button>
+      {isOpen && <button onClick={() => onOpenChange(false)}>Close</button>}
     </div>
   )
 }))
@@ -22,7 +22,7 @@ vi.mock('./CreateLessonDialog', () => ({
   default: ({ part, isOpen, onOpenChange }: any) => (
     <div data-testid="create-lesson-dialog" data-open={isOpen}>
       Lesson dialog for {part?.name}
-      <button onClick={() => onOpenChange(false)}>Close</button>
+      {isOpen && <button onClick={() => onOpenChange(false)}>Close</button>}
     </div>
   )
 }))

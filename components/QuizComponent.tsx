@@ -77,10 +77,10 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ questionId, question, ans
       setIsChecking(true);
       try {
         const response = await checkQuizAnswer(questionId, selected.id);
-        if (response?.answer && typeof response.answer.is_correct === 'boolean') {
-          setIsCorrect(response.answer.is_correct);
-          setCorrectAnswerId(response.answer.correct_answer_id ?? null);
-          if (lessonSlug) trackEvent('QUIZ_ATTEMPT', { lesson_slug: lessonSlug, question_id: questionId, is_correct: response.answer.is_correct });
+        if (response && typeof response.is_correct === 'boolean') {
+          setIsCorrect(response.is_correct);
+          setCorrectAnswerId(response.correct_answer_id ?? null);
+          if (lessonSlug) trackEvent('QUIZ_ATTEMPT', { lesson_slug: lessonSlug, question_id: questionId, is_correct: response.is_correct });
         } else {
           // Fallback to client-side validation if API response is invalid
           setIsCorrect(Boolean(selected.isCorrect));
@@ -149,7 +149,7 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ questionId, question, ans
     <Card className="!p-0 overflow-hidden">
       <div className="p-6">
         <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">{question}</p>
-        {explanation && (
+        {explanation && !isSubmitted && (
           <p className="mt-2 text-gray-700 dark:text-gray-300">{explanation}</p>
         )}
         <div className="mt-4">
@@ -170,7 +170,7 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ questionId, question, ans
           <div className="mt-6">
             <Button
               onClick={handleSubmit}
-              disabled={selectedAnswerIndex === null || isChecking}
+              disabled={isChecking || selectedAnswerIndex === null}
               className="w-full sm:w-auto"
             >
               {isChecking ? 'Checking…' : 'Check Answer'}

@@ -105,7 +105,7 @@ describe('CourseDetailView', () => {
     expect(screen.getByText('Lesson 3')).toBeInTheDocument()
   })
 
-  it('should render "What You'll Learn" section', () => {
+  it('should render "What You\'ll Learn" section', () => {
     render(<CourseDetailView course={mockCourse} onEnroll={mockOnEnroll} />)
 
     expect(screen.getByText("What You'll Learn")).toBeInTheDocument()
@@ -201,7 +201,7 @@ describe('CourseDetailView', () => {
   })
 
   it('should render feature icons in sidebar', () => {
-    render(<CourseDetailView course={mockCourse} onEnroll={mockOnroll} />)
+    render(<CourseDetailView course={mockCourse} onEnroll={mockOnEnroll} />)
 
     // Should have multiple SVG icons for features
     const svgs = document.querySelectorAll('svg')

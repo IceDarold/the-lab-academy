@@ -1,13 +1,18 @@
+var mockEditorRef: any
+
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import InteractiveCodeRunner from './InteractiveCodeRunner'
 
 // Mock react-simple-code-editor
-const mockEditor = vi.fn()
-vi.mock('react-simple-code-editor', () => ({
-  default: mockEditor,
-}))
+vi.mock('react-simple-code-editor', () => {
+  const mock = vi.fn()
+  mockEditorRef = mock
+  return {
+    default: mock,
+  }
+})
 
 // Mock components
 vi.mock('./Button', () => ({
@@ -57,7 +62,7 @@ describe('InteractiveCodeRunner', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    mockEditor.mockImplementation(({ value, onValueChange, highlight }: any) => (
+    mockEditorRef.mockImplementation(({ value, onValueChange, highlight }: any) => (
       <textarea
         data-testid="code-editor"
         value={value}
@@ -119,7 +124,7 @@ describe('InteractiveCodeRunner', () => {
 
     expect(mockTrackEvent).toHaveBeenCalledWith('CODE_EXECUTION', {
       lesson_slug: 'test-lesson',
-      character_count: 13, // length of 'print("hello")'
+      character_count: 14, // length of 'print("hello")'
     })
   })
 

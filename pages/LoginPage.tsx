@@ -12,6 +12,7 @@ const LoginPage = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [isSubmittingLocal, setIsSubmittingLocal] = useState(false);
   const { login } = useAuth();
 
   const {
@@ -23,12 +24,16 @@ const LoginPage = () => {
   });
 
   const onSubmit = async (data: LoginData) => {
+    console.log('onSubmit called with data:', data);
     setApiError(null);
+    setIsSubmittingLocal(true);
     try {
         await login(data.email, data.password);
         // Redirect is handled within the login function in AuthContext
     } catch (err) {
+        console.log('onSubmit error:', err);
         setApiError((err as Error).message);
+        setIsSubmittingLocal(false);
     }
   };
 
@@ -62,7 +67,7 @@ const LoginPage = () => {
                         {...register('email')}
                         // FIX: Cast message to string to resolve TypeScript type mismatch from react-hook-form.
                         error={errors.email?.message as string}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isSubmittingLocal}
                     />
                     <Input
                         id="password"
@@ -73,7 +78,7 @@ const LoginPage = () => {
                         {...register('password')}
                         // FIX: Cast message to string to resolve TypeScript type mismatch from react-hook-form.
                         error={errors.password?.message as string}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isSubmittingLocal}
                     />
 
                     <div className="flex items-center">
@@ -84,7 +89,7 @@ const LoginPage = () => {
                             checked={showPassword}
                             onChange={(e) => setShowPassword(e.target.checked)}
                             className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || isSubmittingLocal}
                         />
                         <label htmlFor="show-password" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
                             Show password
@@ -100,7 +105,7 @@ const LoginPage = () => {
                                 checked={rememberMe}
                                 onChange={(e) => setRememberMe(e.target.checked)}
                                 className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                disabled={isSubmitting}
+                                disabled={isSubmitting || isSubmittingLocal}
                             />
                             <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
                                 Remember me
@@ -123,7 +128,7 @@ const LoginPage = () => {
                     )}
 
                     <div>
-                        <Button type="submit" variant="primary" className="w-full" loading={isSubmitting}>
+                        <Button type="submit" variant="primary" className="w-full" loading={isSubmitting || isSubmittingLocal}>
                             Sign in
                         </Button>
                     </div>

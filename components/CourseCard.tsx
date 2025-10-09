@@ -2,7 +2,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import Card from './Card';
 import ProgressBar from './ProgressBar';
-import Button from './Button';
 import { CourseProgressStatus } from '../types/courses';
 
 interface CourseCardProps {
@@ -13,6 +12,7 @@ interface CourseCardProps {
   description?: string;
   progress?: number;
   onCourseClick?: () => void;
+  completed?: boolean;
 }
 
 const CheckIcon = () => (
@@ -30,7 +30,10 @@ const CourseCard: React.FC<CourseCardProps> = ({
   description,
   progress,
   onCourseClick,
+  completed,
 }) => {
+  const isCompleted = completed ?? (status === 'completed');
+
   const getButtonText = () => {
     switch (status) {
       case 'public':
@@ -46,7 +49,15 @@ const CourseCard: React.FC<CourseCardProps> = ({
     }
   };
 
-  const completedBorderStyle = status === 'completed' ? 'border-green-500' : 'dark:border-gray-700';
+  const getButtonClasses = () => {
+    const baseClasses = 'relative inline-flex items-center justify-center px-4 py-2 border text-sm font-semibold rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors duration-200';
+    const variantClasses = isCompleted
+      ? 'border-gray-300 text-gray-900 bg-white hover:bg-gray-50 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600 dark:hover:bg-gray-700'
+      : 'border-transparent text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500';
+    return `${baseClasses} ${variantClasses} w-full`;
+  };
+
+  const completedBorderStyle = isCompleted ? 'border-green-500' : 'dark:border-gray-700';
 
   return (
     <motion.div
@@ -60,7 +71,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
             <div className="aspect-w-16 aspect-h-9">
                 <img className="object-cover w-full h-full brightness-90" src={imageUrl} alt={`Image for ${courseName}`} />
             </div>
-            {status === 'completed' && (
+            {isCompleted && (
                 <div className="absolute inset-0 bg-green-600 bg-opacity-40 flex items-center justify-center">
                     <CheckIcon />
                 </div>
@@ -98,23 +109,23 @@ const CourseCard: React.FC<CourseCardProps> = ({
                 <ProgressBar progress={progress} />
               </div>
             )}
-            {status === 'completed' && (
-              <div className="flex items-center space-x-2">
-                <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
-                </svg>
-                <span className="text-green-600 dark:text-green-400 font-semibold">Course Complete</span>
-              </div>
-            )}
+            {isCompleted && (
+               <div className="flex items-center space-x-2">
+                 <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
+                 </svg>
+                 <span className="text-green-600 dark:text-green-400 font-semibold">Course Complete</span>
+               </div>
+             )}
           </div>
           
           <div className="mt-6">
-            <Button
-              variant={status === 'completed' ? 'secondary' : 'primary'}
-              className="w-full"
+            <button
+              className={getButtonClasses()}
+              type="button"
             >
               {getButtonText()}
-            </Button>
+            </button>
           </div>
         </div>
       </Card>

@@ -1,7 +1,7 @@
 import React, { forwardRef } from 'react';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label: string;
+  label?: string;
   id: string;
   error?: string;
 }
@@ -14,10 +14,12 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <div className={className}>
-        <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          {label}
-        </label>
-        <div className="mt-1">
+        {label && (
+          <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {label}
+          </label>
+        )}
+        <div className={label ? "mt-1" : ""}>
           <input
             id={id}
             ref={ref}

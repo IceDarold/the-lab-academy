@@ -25,11 +25,9 @@ const Accordion: React.FC<AccordionProps> = ({ title, children, defaultOpen = fa
         <div className="w-full">{title}</div>
         <ChevronDownIcon className={`w-5 h-5 transition-transform duration-300 flex-shrink-0 ml-4 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
-      {isOpen && (
-        <div className="px-2 pb-4 text-gray-600 dark:text-gray-400">
-          {children}
-        </div>
-      )}
+      <div className={`px-2 pb-4 text-gray-600 dark:text-gray-400 ${isOpen ? '' : 'hidden'}`}>
+        {children}
+      </div>
     </div>
   );
 };

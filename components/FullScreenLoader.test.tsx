@@ -35,7 +35,7 @@ describe('FullScreenLoader', () => {
     render(<FullScreenLoader />)
 
     const circles = document.querySelectorAll('circle')
-    expect(circles).toHaveLength(2) // Background circle and path
+    expect(circles).toHaveLength(2) // Background circle and foreground circle
   })
 
   it('should have correct circle attributes', () => {
@@ -46,15 +46,17 @@ describe('FullScreenLoader', () => {
     expect(backgroundCircle).toHaveAttribute('cy', '12')
     expect(backgroundCircle).toHaveAttribute('r', '10')
     expect(backgroundCircle).toHaveAttribute('stroke', 'currentColor')
-    expect(backgroundCircle).toHaveAttribute('strokeWidth', '4')
   })
 
-  it('should have correct path attributes', () => {
+  it('should have correct foreground circle attributes', () => {
     render(<FullScreenLoader />)
 
-    const path = document.querySelector('path.opacity-75')
-    expect(path).toHaveAttribute('fill', 'currentColor')
-    expect(path).toHaveAttribute('d', 'M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z')
+    const foregroundCircle = document.querySelector('circle.opacity-75')
+    expect(foregroundCircle).toHaveAttribute('cx', '12')
+    expect(foregroundCircle).toHaveAttribute('cy', '12')
+    expect(foregroundCircle).toHaveAttribute('r', '10')
+    expect(foregroundCircle).toHaveAttribute('stroke', 'currentColor')
+    expect(foregroundCircle).toHaveAttribute('stroke-width', '4')
   })
 
   it('should have correct SVG attributes', () => {

@@ -37,6 +37,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
 
   const applyTokensToStorage = useCallback((tokens: StoredTokens) => {
     storeTokens(tokens);
@@ -156,6 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const login = async (email: string, password: string) => {
+    setIsAuthenticating(true);
     try {
       const tokens = await loginService(email, password);
       persistAuthTokens(tokens);
@@ -171,9 +173,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         tokenType: tokens.tokenType ?? 'bearer',
       });
     } catch (error) {
-      
+      // Clear stored tokens on any error after persisting them
+      clearStoredTokens();
+      if (api.defaults.headers?.common?.Authorization) {
+        delete api.defaults.headers.common['Authorization'];
+      }
+
       // Re-throw the error so the UI component can handle it
       throw new Error(extractErrorMessage(error));
+    } finally {
+      setIsAuthenticating(false);
     }
   };
 
@@ -184,6 +193,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const register = async (fullName: string, email: string, password: string) => {
+    setIsAuthenticating(true);
     try {
       const result = await registerService(fullName, email, password);
 
@@ -206,11 +216,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { status: 'authenticated' as const, tokens: result.tokens };
     } catch (error) {
-      
+
       // Re-throw the error so the UI component can handle it
       throw new Error(extractErrorMessage(error));
+    } finally {
+      setIsAuthenticating(false);
     }
-};
+  };
   const checkEmail = async (email: string): Promise<boolean> => {
     try {
       return await checkEmailService(email);
@@ -225,6 +237,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     isAuthenticated: !!user,
     isLoading,
+    isAuthenticating,
     login,
     logout,
     checkEmail,

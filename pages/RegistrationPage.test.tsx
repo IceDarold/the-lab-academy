@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { forwardRef } from 'react'
 import { BrowserRouter } from 'react-router-dom'
 import RegistrationPage from './RegistrationPage'
 import { useAuth } from '../contexts/AuthContext'
@@ -20,13 +21,21 @@ vi.mock('../components/Button', () => ({
 }))
 
 vi.mock('../components/Input', () => ({
-  default: ({ label, error, ...props }: any) => (
+  default: forwardRef<HTMLInputElement, any>(({ label, id, error, ...props }, ref) => (
     <div>
-      <label>{label}</label>
-      <input {...props} />
-      {error && <span className="error">{error}</span>}
+      {label && <label htmlFor={id}>{label}</label>}
+      <div className={label ? "mt-1" : ""}>
+        <input
+          ref={ref}
+          id={id}
+          aria-invalid={error ? "true" : undefined}
+          aria-describedby={error ? `${id}-error` : undefined}
+          {...props}
+        />
+      </div>
+      {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400" id={`${id}-error`}>{error}</p>}
     </div>
-  ),
+  )),
 }))
 
 vi.mock('../components/Card', () => ({
@@ -136,7 +145,6 @@ describe('RegistrationPage', () => {
   })
 
   it('should handle pending confirmation registration', async () => {
-    const user = userEvent.setup()
     mockRegister.mockResolvedValueOnce({ status: 'pending_confirmation' })
 
     renderRegistrationPage()
@@ -147,11 +155,11 @@ describe('RegistrationPage', () => {
     const termsCheckbox = screen.getByLabelText(/I agree to the/)
     const submitButton = screen.getByRole('button', { name: 'Create account' })
 
-    await user.type(fullNameInput, 'John Doe')
-    await user.type(emailInput, 'john@example.com')
-    await user.type(passwordInput, 'password123')
-    await user.click(termsCheckbox)
-    await user.click(submitButton)
+    fireEvent.change(fullNameInput, { target: { value: 'John Doe' } })
+    fireEvent.change(emailInput, { target: { value: 'john@example.com' } })
+    fireEvent.change(passwordInput, { target: { value: 'password123' } })
+    fireEvent.click(termsCheckbox)
+    fireEvent.click(submitButton)
 
     await waitFor(() => {
       expect(screen.getByTestId('modal')).toBeInTheDocument()
@@ -360,7 +368,6 @@ describe('RegistrationPage', () => {
   })
 
   it('should close confirmation modal', async () => {
-    const user = userEvent.setup()
     mockRegister.mockResolvedValueOnce({ status: 'pending_confirmation' })
 
     renderRegistrationPage()
@@ -372,18 +379,18 @@ describe('RegistrationPage', () => {
     const termsCheckbox = screen.getByLabelText(/I agree to the/)
     const submitButton = screen.getByRole('button', { name: 'Create account' })
 
-    await user.type(fullNameInput, 'John Doe')
-    await user.type(emailInput, 'john@example.com')
-    await user.type(passwordInput, 'password123')
-    await user.click(termsCheckbox)
-    await user.click(submitButton)
+    fireEvent.change(fullNameInput, { target: { value: 'John Doe' } })
+    fireEvent.change(emailInput, { target: { value: 'john@example.com' } })
+    fireEvent.change(passwordInput, { target: { value: 'password123' } })
+    fireEvent.click(termsCheckbox)
+    fireEvent.click(submitButton)
 
     await waitFor(() => {
       expect(screen.getByTestId('modal')).toBeInTheDocument()
     })
 
     const closeButton = screen.getByText('OK')
-    await user.click(closeButton)
+    fireEvent.click(closeButton)
 
     expect(screen.queryByTestId('modal')).not.toBeInTheDocument()
   })
