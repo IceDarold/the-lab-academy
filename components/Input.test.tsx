@@ -161,8 +161,7 @@ describe('Input', () => {
     render(<Input label="" id="test-input" />)
 
     const label = document.querySelector('label')
-    expect(label).toBeInTheDocument()
-    expect(label).toHaveTextContent('')
+    expect(label).not.toBeInTheDocument()
   })
 
   it('should handle empty error', () => {

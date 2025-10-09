@@ -61,7 +61,7 @@ const CourseDetailView: React.FC<CourseDetailViewProps> = ({ course, onEnroll })
                     {!course && (
                         <p>Loading course information…</p>
                     )}
-                    {course && course.modules.length === 0 && (
+                    {course && course.modules && course.modules.length === 0 && (
                         <p>Detailed syllabus is not available yet. Enroll to receive updates.</p>
                     )}
                 </div>

@@ -22,8 +22,8 @@ const CourseCardSkeleton: React.FC = () => {
              {/* Progress Bar Placeholder */}
              <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/5"></div>
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/6"></div>
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/5"></div>
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/6"></div>
                 </div>
                 <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-full"></div>
              </div>

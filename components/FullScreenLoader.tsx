@@ -16,7 +16,6 @@ const FullScreenLoader = () => {
           cy="12"
           r="10"
           stroke="currentColor"
-          strokeWidth="4"
         ></circle>
         <circle
           className="opacity-75"
@@ -25,8 +24,6 @@ const FullScreenLoader = () => {
           r="10"
           stroke="currentColor"
           strokeWidth="4"
-          strokeDasharray="31.416"
-          strokeDashoffset="31.416"
         ></circle>
       </svg>
     </div>

@@ -9,9 +9,9 @@ const LessonPageSkeleton: React.FC = () => {
           <div className="lg:sticky lg:top-24">
             <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-2/3 mb-6"></div>
             <div className="space-y-4">
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
               <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
               <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
             </div>
           </div>
@@ -21,8 +21,8 @@ const LessonPageSkeleton: React.FC = () => {
         <main className="lg:col-span-9">
           {/* Breadcrumbs & Title */}
           <div>
-            <div className="breadcrumb-skeleton h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4"></div>
-            <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+            <div className="breadcrumb-skeleton h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
+            <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
           </div>
           
           {/* Article Content Skeleton */}

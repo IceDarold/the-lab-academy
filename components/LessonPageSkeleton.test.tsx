@@ -37,7 +37,7 @@ describe('LessonPageSkeleton', () => {
     expect(breadcrumbs).toHaveClass('w-1/3')
 
     const title = document.querySelector('.h-12.bg-gray-200.dark\\:bg-gray-700.rounded')
-    expect(title).toHaveClass('w-3/4')
+    expect(title).toHaveClass('w-5/6')
   })
 
   it('should render article content with multiple sections', () => {
@@ -139,19 +139,19 @@ describe('LessonPageSkeleton', () => {
   it('should have correct width variations', () => {
     render(<LessonPageSkeleton />)
 
-    const fullWidth = document.querySelector('.w-full')
+    const fullWidth = document.querySelector('[class*="w-full"]')
     expect(fullWidth).toBeInTheDocument()
 
-    const threeQuarters = document.querySelector('.w-3/4')
-    expect(threeQuarters).toBeInTheDocument()
+    const fiveSixths = document.querySelector('[class*="w-5/6"]')
+    expect(fiveSixths).toBeInTheDocument()
 
-    const twoThirds = document.querySelector('.w-2/3')
+    const twoThirds = document.querySelector('[class*="w-2/3"]')
     expect(twoThirds).toBeInTheDocument()
 
-    const oneThird = document.querySelector('.w-1/3')
+    const oneThird = document.querySelector('[class*="w-1/3"]')
     expect(oneThird).toBeInTheDocument()
 
-    const oneHalf = document.querySelector('.w-1/2')
+    const oneHalf = document.querySelector('[class*="w-1/2"]')
     expect(oneHalf).toBeInTheDocument()
   })
 

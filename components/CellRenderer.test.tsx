@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import CellRenderer from './CellRenderer'
 import type { Cell } from '../types/lessons'
 
@@ -65,7 +65,7 @@ describe('CellRenderer', () => {
     expect(screen.queryByRole('heading')).not.toBeInTheDocument()
   })
 
-  it('should render code cell with InteractiveCodeRunner', () => {
+  it('should render code cell with InteractiveCodeRunner', async () => {
     const cell: Cell = {
       id: 'code-1',
       type: 'code',
@@ -74,12 +74,14 @@ describe('CellRenderer', () => {
 
     render(<CellRenderer cell={cell} pyodideState="ready" onExecute={mockOnExecute} />)
 
-    expect(screen.getByTestId('interactive-code-runner')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByTestId('interactive-code-runner')).toBeInTheDocument()
+    })
     expect(screen.getByText(/Code: print\("hello"\)/)).toBeInTheDocument()
     expect(screen.getByText(/State: ready/)).toBeInTheDocument()
   })
 
-  it('should render quiz cell with QuizComponent', () => {
+  it('should render quiz cell with QuizComponent', async () => {
     const cell: Cell = {
       id: 'quiz-1',
       type: 'quiz',
@@ -93,7 +95,9 @@ describe('CellRenderer', () => {
 
     render(<CellRenderer cell={cell} pyodideState="ready" onExecute={mockOnExecute} />)
 
-    expect(screen.getByTestId('quiz-component')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByTestId('quiz-component')).toBeInTheDocument()
+    })
     expect(screen.getByText('What is 2+2? - 2 answers')).toBeInTheDocument()
   })
 
@@ -284,7 +288,7 @@ describe('CellRenderer', () => {
     expect(screen.getByText('Question? - 0 answers')).toBeInTheDocument()
   })
 
-  it('should handle empty instructions in challenge cell', () => {
+  it('should handle empty instructions in challenge cell', async () => {
     const cell: Cell = {
       id: 'challenge-6',
       type: 'challenge',
@@ -294,6 +298,13 @@ describe('CellRenderer', () => {
 
     render(<CellRenderer cell={cell} pyodideState="ready" onExecute={mockOnExecute} />)
 
-    expect(screen.getByText('')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByTestId('interactive-code-runner')).toBeInTheDocument()
+    })
+
+    // Find the instructions paragraph and verify it's empty
+    const instructionsElement = screen.getByText('Challenge').nextElementSibling as HTMLElement
+    expect(instructionsElement.tagName).toBe('P')
+    expect(instructionsElement.textContent).toBe('')
   })
 })

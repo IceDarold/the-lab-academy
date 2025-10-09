@@ -71,17 +71,18 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, selectedId, onSelectNode, onA
 
     return (
         <div>
-            <div className="group relative pr-2 rounded-md hover:bg-gray-700/50">
+            <div className="group relative pr-2 rounded-md hover:bg-gray-700/50 text-gray-300">
                 <div
-                    className={`flex items-center gap-2 py-2 cursor-pointer ${
-                        isSelected ? 'bg-blue-600/30 text-white' : 'text-gray-300'
-                    }`}
+                    className="flex items-center gap-2 py-2 cursor-pointer"
                     onClick={handleSelect}
                 >
-                    <div style={{ paddingLeft: `${level * 1.5 + 0.5}rem` }} className="flex items-center gap-2">
-                        {node.type !== 'config' && <StatusIcon status={node.status} />}
-                        <Icon className="h-4 w-4 shrink-0" />
-                        <p className="text-sm truncate">{node.name}</p>
+                    <div className="flex items-center gap-2">
+                        <div style={{ paddingLeft: `${level * 1.5 + 0.5}rem` }} className={`flex items-center gap-2 ${isSelected ? 'bg-blue-600/30 text-white' : ''}`}>
+                            {node.type !== 'config' && <StatusIcon status={node.status} />}
+                            <Icon className="h-4 w-4 shrink-0" />
+                            <p className="text-sm truncate">{node.name}</p>
+                            <div style={{ paddingLeft: `${level * 1.5 + 0.5}rem` }}></div>
+                        </div>
                     </div>
                 </div>
 

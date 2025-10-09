@@ -1,3 +1,4 @@
+import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -20,13 +21,16 @@ vi.mock('../components/Button', () => ({
 }))
 
 vi.mock('../components/Input', () => ({
-  default: ({ label, error, ...props }: any) => (
-    <div>
-      <label>{label}</label>
-      <input {...props} />
-      {error && <span className="error">{error}</span>}
-    </div>
-  ),
+  default: React.forwardRef(({ label, error, ...props }, ref) => {
+    const id = props.id || 'input-id';
+    return (
+      <div>
+        <label htmlFor={id}>{label}</label>
+        <input id={id} ref={ref} {...props} />
+        {error && <span className="error">{error}</span>}
+      </div>
+    );
+  }),
 }))
 
 vi.mock('../components/Card', () => ({

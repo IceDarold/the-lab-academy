@@ -2,13 +2,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
-import { AuthProvider, useAuth } from '../../contexts/AuthContext'
-import { login as loginService, register as registerService, getMe, checkEmail } from '../../services/auth.service'
-import { clearStoredTokens, getStoredTokens, storeTokens } from '../../lib/tokenStorage'
-import api from '../../lib/api'
+import { AuthProvider, useAuth } from '../../../contexts/AuthContext.tsx'
+import { login as loginService, register as registerService, getMe, checkEmail } from '../../../services/auth.service.ts'
+import { clearStoredTokens, getStoredTokens, storeTokens } from '../../../lib/tokenStorage.ts'
+import api from '../../../lib/api.ts'
 
 // Mock API
-vi.mock('../../lib/api', () => ({
+vi.mock('../../../lib/api.ts', () => ({
   default: {
     post: vi.fn(),
     get: vi.fn(),
@@ -21,14 +21,14 @@ vi.mock('../../lib/api', () => ({
 }))
 
 // Mock token storage
-vi.mock('../../lib/tokenStorage', () => ({
+vi.mock('../../../lib/tokenStorage.ts', () => ({
   clearStoredTokens: vi.fn(),
   getStoredTokens: vi.fn(),
   storeTokens: vi.fn(),
 }))
 
 // Mock FullScreenLoader
-vi.mock('../../components/FullScreenLoader', () => ({
+vi.mock('../../../components/FullScreenLoader.tsx', () => ({
   default: () => <div data-testid="loading">Loading...</div>,
 }))
 
@@ -39,17 +39,29 @@ const mockClearStoredTokens = vi.mocked(clearStoredTokens)
 
 // Test component that uses auth
 const TestApp = () => {
-  const { user, isAuthenticated, isLoading, login, register, logout } = useAuth()
+  const { user, isAuthenticated, isLoading, isAuthenticating, login, register, logout } = useAuth()
 
-  if (isLoading) {
+  if (isLoading || isAuthenticating) {
     return <div data-testid="loading">Loading...</div>
   }
 
   if (!isAuthenticated) {
     return (
       <div>
-        <button onClick={() => login('test@example.com', 'password')}>Login</button>
-        <button onClick={() => register('John Doe', 'john@example.com', 'password')}>Register</button>
+        <button onClick={async () => {
+          try {
+            await login('test@example.com', 'password')
+          } catch (error) {
+            // Error is handled by the test - ignore in component
+          }
+        }}>Login</button>
+        <button onClick={async () => {
+          try {
+            await register('John Doe', 'john@example.com', 'password')
+          } catch (error) {
+            // Error is handled by the test - ignore in component
+          }
+        }}>Register</button>
       </div>
     )
   }
@@ -92,23 +104,23 @@ describe('Auth Integration Flows', () => {
         role: 'student' as const,
       }
 
-      mockApi.post.mockResolvedValueOnce({
+      mockApi.post.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve({
         data: {
           access_token: 'access-token-123',
           token_type: 'bearer',
           refresh_token: 'refresh-token-456',
           expires_in: 3600,
         },
-      })
+      }), 100)))
 
-      mockApi.get.mockResolvedValueOnce({
+      mockApi.get.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve({
         data: {
           user_id: 'user-123',
           full_name: 'Test User',
           email: 'test@example.com',
           role: 'student',
         },
-      })
+      }), 100)))
 
       render(
         <BrowserRouter>
@@ -134,7 +146,12 @@ describe('Auth Integration Flows', () => {
       })
 
       // Should have stored tokens
-      expect(mockStoreTokens).toHaveBeenCalledWith(mockTokens)
+      expect(mockStoreTokens).toHaveBeenCalledWith(expect.objectContaining({
+        accessToken: 'access-token-123',
+        tokenType: 'bearer',
+        refreshToken: 'refresh-token-456',
+        expiresAt: expect.any(Number),
+      }))
 
       // Should have set API headers
       expect(api.defaults.headers.common.Authorization).toBe('Bearer access-token-123')
@@ -170,13 +187,6 @@ describe('Auth Integration Flows', () => {
   describe('Registration Flow', () => {
     it('should complete full authenticated registration flow', async () => {
       const user = userEvent.setup()
-
-      const mockTokens = {
-        accessToken: 'register-token-123',
-        tokenType: 'bearer',
-        refreshToken: 'register-refresh-456',
-        expiresIn: 3600,
-      }
 
       const mockUser = {
         id: 'user-456',
@@ -218,7 +228,12 @@ describe('Auth Integration Flows', () => {
         expect(screen.getByTestId('user-info')).toHaveTextContent('Welcome John Doe')
       })
 
-      expect(mockStoreTokens).toHaveBeenCalledWith(mockTokens)
+      expect(mockStoreTokens).toHaveBeenCalledWith(expect.objectContaining({
+        accessToken: 'register-token-123',
+        tokenType: 'bearer',
+        refreshToken: 'register-refresh-456',
+        expiresAt: expect.any(Number),
+      }))
       expect(api.defaults.headers.common.Authorization).toBe('Bearer register-token-123')
     })
 

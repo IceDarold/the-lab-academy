@@ -83,7 +83,7 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText('Something went wrong')).toBeInTheDocument()
 
     // Click retry button
-    const retryButton = screen.getByRole('button', { name: /Retry loading the page/i })
+    const retryButton = screen.getByRole('button', { name: /Try Again/i })
     await user.click(retryButton)
 
     // Rerender with component that doesn't throw
@@ -203,7 +203,7 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText('Something went wrong')).toBeInTheDocument()
 
     // Click retry
-    await user.click(screen.getByRole('button', { name: /Retry loading the page/i }))
+    await user.click(screen.getByRole('button', { name: /Try Again/i }))
 
     // Should reset to no error state
     expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument()

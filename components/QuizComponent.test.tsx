@@ -92,7 +92,8 @@ describe('QuizComponent', () => {
     const user = userEvent.setup()
     render(<QuizComponent {...defaultProps} />)
 
-    expect(screen.queryByText('Check Answer')).not.toBeInTheDocument()
+    const checkButton = screen.getByText('Check Answer')
+    expect(checkButton).toBeInTheDocument()
 
     const optionA = screen.getByText('Option A')
     await user.click(optionA)
@@ -103,7 +104,7 @@ describe('QuizComponent', () => {
   it('should disable check answer button when no answer is selected', () => {
     render(<QuizComponent {...defaultProps} />)
 
-    const checkButton = screen.getByText('Check Answer')
+    const checkButton = screen.getByRole('button', { name: /check answer/i })
     expect(checkButton).toBeDisabled()
   })
 
@@ -118,8 +119,11 @@ describe('QuizComponent', () => {
     const optionA = screen.getByText('Option A')
     await user.click(optionA)
 
-    const checkButton = screen.getByText('Checking…')
-    expect(checkButton).toBeDisabled()
+    const checkButton = screen.getByRole('button', { name: /check answer/i })
+    await user.click(checkButton)
+
+    const checkingButton = screen.getByText('Checking…')
+    expect(checkingButton.closest('button')).toBeDisabled()
   })
 
   it('should disable all answer buttons when submitted', async () => {

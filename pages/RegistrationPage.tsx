@@ -21,6 +21,7 @@ const RegistrationPage = () => {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
+    watch,
   } = useForm<RegisterData>({
     resolver: zodResolver(RegisterSchema),
   });
@@ -90,44 +91,62 @@ const RegistrationPage = () => {
         <div className="mt-8">
             <Card>
                 <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-                    <Input
-                        id="full-name"
-                        label="Full Name"
-                        type="text"
-                        autoComplete="name"
-                        placeholder="Ada Lovelace"
-                        {...register('fullName')}
-                        // FIX: Cast message to string to resolve TypeScript type mismatch from react-hook-form.
-                        error={errors.fullName?.message as string}
-                        disabled={isSubmitting}
-                    />
-                    <Input
-                        id="email-address"
-                        label="Email address"
-                        type="email"
-                        autoComplete="email"
-                        placeholder="you@example.com"
-                        {...emailRest}
-                        onBlur={handleEmailBlur}
-                        onChange={(e) => {
-                          emailOnChange(e);
-                          handleEmailChange(e);
-                        }}
-                        // FIX: Cast message to string to resolve TypeScript type mismatch from react-hook-form.
-                        error={errors.email?.message as string || emailExistsError}
-                        disabled={isSubmitting}
-                    />
-                    <Input
-                        id="password"
-                        label="Password"
-                        type={showPassword ? "text" : "password"}
-                        autoComplete="new-password"
-                        placeholder="••••••••"
-                        {...register('password')}
-                        // FIX: Cast message to string to resolve TypeScript type mismatch from react-hook-form.
-                        error={errors.password?.message as string}
-                        disabled={isSubmitting}
-                    />
+                    <div>
+                        <label htmlFor="full-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Full Name
+                        </label>
+                        <div className="mt-1">
+                            <Input
+                                id="full-name"
+                                type="text"
+                                autoComplete="name"
+                                placeholder="Ada Lovelace"
+                                {...register('fullName')}
+                                value={watch('fullName') || ''}
+                                error={errors.fullName?.message}
+                                disabled={isSubmitting}
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Email address
+                        </label>
+                        <div className="mt-1">
+                            <Input
+                                id="email-address"
+                                type="email"
+                                autoComplete="email"
+                                placeholder="you@example.com"
+                                {...emailRest}
+                                value={watch('email') || ''}
+                                onBlur={handleEmailBlur}
+                                onChange={(e) => {
+                                  emailOnChange(e);
+                                  handleEmailChange(e);
+                                }}
+                                error={errors.email?.message || emailExistsError}
+                                disabled={isSubmitting}
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Password
+                        </label>
+                        <div className="mt-1">
+                            <Input
+                                id="password"
+                                type={showPassword ? "text" : "password"}
+                                autoComplete="new-password"
+                                placeholder="••••••••"
+                                {...register('password')}
+                                value={watch('password') || ''}
+                                error={errors.password?.message}
+                                disabled={isSubmitting}
+                            />
+                        </div>
+                    </div>
 
                     <div className="flex items-center">
                         <input
@@ -150,6 +169,7 @@ const RegistrationPage = () => {
                                 id="terms"
                                 type="checkbox"
                                 {...register('terms')}
+                                checked={watch('terms') || false}
                                 className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
                                 disabled={isSubmitting}
                             />
@@ -167,8 +187,7 @@ const RegistrationPage = () => {
                             </label>
                              {errors.terms && (
                                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                                    {/* FIX: Cast message to string to render it as a valid ReactNode. */}
-                                    {errors.terms.message as string}
+                                    {errors.terms.message}
                                 </p>
                             )}
                         </div>

@@ -10,7 +10,12 @@ const AnalyticsTracker = () => {
   const { trackEvent } = useAnalytics();
 
   useEffect(() => {
-    const currentUrl = pathname + searchParams.toString();
+    let queryString = '';
+    for (const [key, value] of searchParams.entries()) {
+      if (queryString) queryString += '&';
+      queryString += encodeURIComponent(key) + '=' + encodeURIComponent(value);
+    }
+    const currentUrl = pathname + queryString;
     trackEvent('PAGE_VIEW', { path: currentUrl });
   }, [pathname, searchParams, trackEvent]);
 

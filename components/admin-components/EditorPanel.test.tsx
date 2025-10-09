@@ -1,3 +1,5 @@
+var mockParseLessonRef: any
+
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -39,14 +41,16 @@ vi.mock('../../services/admin.service', () => ({
 }))
 
 // Mock lesson parser
-const mockParseLesson = vi.fn((content) => ({
-  metadata: { title: 'Test Lesson', status: 'published' },
-  cells: [{ type: 'text', content: 'Test content' }]
-}))
-
-vi.mock('../../lib/admin-utils/lessonParser', () => ({
-  parseLesson: mockParseLesson
-}))
+vi.mock('../../lib/admin-utils/lessonParser', () => {
+  const mock = vi.fn((content) => ({
+    metadata: { title: 'Test Lesson', status: 'published' },
+    cells: [{ type: 'text', content: 'Test content' }]
+  }))
+  mockParseLessonRef = mock
+  return {
+    parseLesson: mock
+  }
+})
 
 // Mock child components
 vi.mock('./admin/lessons/CellRenderer', () => ({
@@ -248,7 +252,7 @@ describe('EditorPanel', () => {
     const editor = screen.getByTestId('code-editor')
     expect(editor).toBeInTheDocument()
     // Should contain YAML placeholder content
-    expect(editor).toHaveValue(expect.stringContaining('# Configuration for: React Course'))
+    expect(editor).toHaveValue('# Configuration for: React Course\ntitle: A great title\ndescription: A comprehensive overview of fundamental concepts.\nauthor: AI Academy\nversion: 1.0.0\n')
   })
 
   it('should render unsupported item message for config type', () => {
@@ -266,7 +270,7 @@ describe('EditorPanel', () => {
 
   it('should handle parsing errors gracefully', () => {
     // Mock parseLesson to throw error
-    mockParseLesson.mockImplementationOnce(() => {
+    mockParseLessonRef.mockImplementationOnce(() => {
       throw new Error('Parse error')
     })
 
@@ -293,7 +297,7 @@ describe('EditorPanel', () => {
     const user = userEvent.setup()
 
     // Mock parseLesson to throw error
-    mockParseLesson.mockImplementation(() => {
+    mockParseLessonRef.mockImplementation(() => {
       throw new Error('Parse error')
     })
 
@@ -334,7 +338,7 @@ describe('EditorPanel', () => {
   })
 
   it('should handle lesson with no metadata title', () => {
-    mockParseLesson.mockReturnValueOnce({
+    mockParseLessonRef.mockReturnValueOnce({
       metadata: {},
       cells: []
     })
@@ -384,7 +388,7 @@ describe('EditorPanel', () => {
   })
 
   it('should handle empty lesson cells', () => {
-    mockParseLesson.mockReturnValueOnce({
+    mockParseLessonRef.mockReturnValueOnce({
       metadata: { title: 'Empty Lesson' },
       cells: []
     })

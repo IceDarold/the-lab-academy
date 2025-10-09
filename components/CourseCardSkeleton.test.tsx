@@ -37,7 +37,7 @@ describe('CourseCardSkeleton', () => {
     const progressContainer = document.querySelector('.space-y-2')
     expect(progressContainer).toBeInTheDocument()
 
-    const progressLabels = progressContainer?.querySelectorAll('.h-4.bg-gray-200.dark\\:bg-gray-700.rounded')
+    const progressLabels = progressContainer?.querySelectorAll('.h-3.bg-gray-200.dark\\:bg-gray-700.rounded')
     expect(progressLabels).toHaveLength(2)
 
     const progressBar = progressContainer?.querySelector('.h-2\\.5.bg-gray-200.dark\\:bg-gray-700.rounded-full')
