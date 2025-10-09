@@ -17,6 +17,7 @@ interface ContentTreeProps {
 type ModalState = {
   type: 'part' | 'lesson' | null;
   parentNode: ContentNode | null;
+  isOpen: boolean;
 };
 
 const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'icon' }> = ({ children, className, variant = 'primary', ...props }) => {
@@ -70,21 +71,20 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, selectedId, onSelectNode, onA
 
     return (
         <div>
-            <div
-                className={`group relative flex items-center gap-2 pr-2 rounded-md hover:bg-gray-700/50 cursor-pointer ${
-                    isSelected ? 'bg-blue-600/30 text-white' : 'text-gray-300'
-                }`}
-                onClick={handleSelect}
-            >
-                <div 
-                    style={{ paddingLeft: `${level * 1.5 + 0.5}rem` }}
-                    className="flex-grow flex items-center gap-2 py-2"
+            <div className="group relative pr-2 rounded-md hover:bg-gray-700/50">
+                <div
+                    className={`flex items-center gap-2 py-2 cursor-pointer ${
+                        isSelected ? 'bg-blue-600/30 text-white' : 'text-gray-300'
+                    }`}
+                    onClick={handleSelect}
                 >
-                    {node.type !== 'config' && <StatusIcon status={node.status} />}
-                    <Icon className="h-4 w-4 shrink-0" />
-                    <p className="text-sm truncate">{node.name}</p>
+                    <div style={{ paddingLeft: `${level * 1.5 + 0.5}rem` }} className="flex items-center gap-2">
+                        {node.type !== 'config' && <StatusIcon status={node.status} />}
+                        <Icon className="h-4 w-4 shrink-0" />
+                        <p className="text-sm truncate">{node.name}</p>
+                    </div>
                 </div>
-                
+
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                     {node.type === 'course' && (
                         <Button variant="icon" aria-label={`Add part to ${node.name}`} onClick={(e) => { e.stopPropagation(); onAddPart(node); }}>
@@ -118,22 +118,22 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, selectedId, onSelectNode, onA
 };
 
 const ContentTree: React.FC<ContentTreeProps> = ({ data, selectedId, onSelectNode }) => {
-    const [modalState, setModalState] = React.useState<ModalState>({ type: null, parentNode: null });
+    const [modalState, setModalState] = React.useState<ModalState>({ type: null, parentNode: null, isOpen: false });
     console.log('[ContentTree] Render. Selected ID:', selectedId, 'Modal state:', modalState.type);
     
     const handleAddPart = (course: ContentNode) => {
         console.log(`[ContentTree] Opening 'Add Part' modal for course: id=${course.id}`);
-        setModalState({ type: 'part', parentNode: course });
+        setModalState({ type: 'part', parentNode: course, isOpen: true });
     };
 
     const handleAddLesson = (part: ContentNode) => {
         console.log(`[ContentTree] Opening 'Add Lesson' modal for part: id=${part.id}`);
-        setModalState({ type: 'lesson', parentNode: part });
+        setModalState({ type: 'lesson', parentNode: part, isOpen: true });
     };
 
     const handleCloseModal = () => {
         console.log('[ContentTree] Closing modal.');
-        setModalState({ type: null, parentNode: null });
+        setModalState({ type: null, parentNode: null, isOpen: false });
     };
 
     return (
@@ -161,20 +161,16 @@ const ContentTree: React.FC<ContentTreeProps> = ({ data, selectedId, onSelectNod
             </div>
 
             {/* Render Modals */}
-            {modalState.parentNode && (
-              <>
-                <CreatePartDialog
-                  course={modalState.parentNode}
-                  isOpen={modalState.type === 'part'}
-                  onOpenChange={(isOpen) => !isOpen && handleCloseModal()}
-                />
-                <CreateLessonDialog
-                  part={modalState.parentNode}
-                  isOpen={modalState.type === 'lesson'}
-                  onOpenChange={(isOpen) => !isOpen && handleCloseModal()}
-                />
-              </>
-            )}
+            <CreatePartDialog
+              course={modalState.parentNode}
+              isOpen={modalState.type === 'part' && modalState.isOpen}
+              onOpenChange={(isOpen) => setModalState(prev => ({ ...prev, isOpen }))}
+            />
+            <CreateLessonDialog
+              part={modalState.parentNode}
+              isOpen={modalState.type === 'lesson' && modalState.isOpen}
+              onOpenChange={(isOpen) => setModalState(prev => ({ ...prev, isOpen }))}
+            />
         </div>
     );
 };

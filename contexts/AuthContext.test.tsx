@@ -52,6 +52,30 @@ const TestComponent = () => {
     return <div>Loading...</div>
   }
 
+  const handleLogin = async () => {
+    try {
+      await login('test@example.com', 'password')
+    } catch (error) {
+      // Error handled to prevent unhandled rejections in tests
+    }
+  }
+
+  const handleRegister = async () => {
+    try {
+      await register('John Doe', 'john@example.com', 'password')
+    } catch (error) {
+      // Error handled to prevent unhandled rejections in tests
+    }
+  }
+
+  const handleCheckEmail = async () => {
+    try {
+      await checkEmail('test@example.com')
+    } catch (error) {
+      // Error handled to prevent unhandled rejections in tests
+    }
+  }
+
   return (
     <div>
       <div data-testid="auth-status">
@@ -60,10 +84,10 @@ const TestComponent = () => {
       <div data-testid="user-info">
         {user ? `User: ${user.fullName} (${user.email})` : 'No user'}
       </div>
-      <button onClick={() => login('test@example.com', 'password')}>Login</button>
-      <button onClick={() => register('John Doe', 'john@example.com', 'password')}>Register</button>
+      <button onClick={handleLogin}>Login</button>
+      <button onClick={handleRegister}>Register</button>
       <button onClick={logout}>Logout</button>
-      <button onClick={() => checkEmail('test@example.com')}>Check Email</button>
+      <button onClick={handleCheckEmail}>Check Email</button>
     </div>
   )
 }

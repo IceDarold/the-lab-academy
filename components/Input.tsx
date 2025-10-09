@@ -21,7 +21,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             id={id}
             ref={ref}
-            aria-invalid={!!error}
+            aria-invalid={error ? "true" : undefined}
             aria-describedby={error ? `${id}-error` : undefined}
             className={`block w-full rounded-md shadow-sm sm:text-sm px-3 py-2 ${
               error ? errorClasses : defaultClasses
@@ -29,7 +29,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
         </div>
-        {error && (
+        {error !== undefined && (
           <p className="mt-2 text-sm text-red-600 dark:text-red-400" id={`${id}-error`}>
             {error}
           </p>

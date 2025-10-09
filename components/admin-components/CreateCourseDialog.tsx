@@ -95,7 +95,7 @@ const CreateCourseDialog: React.FC<{ children: React.ReactNode }> = ({ children 
           
           {/* Dialog Content */}
           <div className="relative z-10 w-full max-w-lg p-6 mx-4 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl">
-            <form onSubmit={handleSubmit(onSubmit)}>
+            <form role="form" onSubmit={handleSubmit(onSubmit)}>
               {/* Header */}
               <div className="flex flex-col space-y-1.5 text-center sm:text-left mb-6">
                 <h2 className="text-lg font-semibold leading-none tracking-tight text-white">Create New Course</h2>
@@ -107,14 +107,14 @@ const CreateCourseDialog: React.FC<{ children: React.ReactNode }> = ({ children 
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="title" className="text-right">Title</Label>
                   <div className="col-span-3">
-                    <Input id="title" placeholder="e.g., Advanced Python Programming" {...register('title')} />
+                    <Input type="text" id="title" placeholder="e.g., Advanced Python Programming" {...register('title')} />
                     {errors.title && <p className="text-red-400 text-sm mt-1">{errors.title.message}</p>}
                   </div>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="slug" className="text-right">Slug</Label>
                   <div className="col-span-3">
-                    <Input id="slug" placeholder="e.g., advanced-python-programming" {...register('slug')} />
+                    <Input type="text" id="slug" placeholder="e.g., advanced-python-programming" {...register('slug')} />
                     {errors.slug && <p className="text-red-400 text-sm mt-1">{errors.slug.message}</p>}
                   </div>
                 </div>

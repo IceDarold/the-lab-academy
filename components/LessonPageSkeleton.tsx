@@ -21,8 +21,8 @@ const LessonPageSkeleton: React.FC = () => {
         <main className="lg:col-span-9">
           {/* Breadcrumbs & Title */}
           <div>
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
-            <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+            <div className="breadcrumb-skeleton h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4"></div>
+            <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
           </div>
           
           {/* Article Content Skeleton */}

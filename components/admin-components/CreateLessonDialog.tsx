@@ -94,7 +94,7 @@ const CreateLessonDialog: React.FC<CreateLessonDialogProps> = ({ part, isOpen, o
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/60" onClick={() => onOpenChange(false)}></div>
       <div className="relative z-10 w-full max-w-lg p-6 mx-4 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form role="form" onSubmit={handleSubmit(onSubmit)}>
           <div className="flex flex-col space-y-1.5 text-center sm:text-left mb-6">
             <h2 className="text-lg font-semibold leading-none tracking-tight text-white">Create New Lesson in '{part.name}'</h2>
             <p className="text-sm text-gray-400">Enter details for the new lesson file.</p>
@@ -104,21 +104,21 @@ const CreateLessonDialog: React.FC<CreateLessonDialogProps> = ({ part, isOpen, o
              <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="prefix" className="text-right">Prefix</Label>
                 <div className="col-span-3">
-                    <Input id="prefix" placeholder="01" maxLength={2} className="w-20" {...register('prefix')} />
+                    <Input type="text" id="prefix" placeholder="01" maxLength={2} className="w-20" {...register('prefix')} />
                     {errors.prefix && <p className="text-red-400 text-sm mt-1">{errors.prefix.message}</p>}
                 </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="title" className="text-right">Title</Label>
               <div className="col-span-3">
-                <Input id="title" placeholder="e.g., Introduction to Tensors" {...register('title')} />
+                <Input type="text" id="title" placeholder="e.g., Introduction to Tensors" {...register('title')} />
                 {errors.title && <p className="text-red-400 text-sm mt-1">{errors.title.message}</p>}
               </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="slug" className="text-right">Slug</Label>
               <div className="col-span-3">
-                <Input id="slug" placeholder="e.g., introduction-to-tensors" {...register('slug')} />
+                <Input type="text" id="slug" placeholder="e.g., introduction-to-tensors" {...register('slug')} />
                 {errors.slug && <p className="text-red-400 text-sm mt-1">{errors.slug.message}</p>}
               </div>
             </div>
