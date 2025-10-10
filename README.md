@@ -1,6 +1,6 @@
 # The Lab Academy
 
-An interactive online learning platform designed for programming and technology education. Built with modern web technologies to provide an engaging learning experience with hands-on coding exercises, quizzes, and comprehensive course management.
+A full-stack interactive online learning platform designed for programming and technology education. Built with modern web technologies to provide an engaging learning experience with hands-on coding exercises, quizzes, and comprehensive course management.
 
 ## 🚀 Features
 
@@ -48,9 +48,13 @@ An interactive online learning platform designed for programming and technology 
 - **PostCSS** - CSS processing
 - **Autoprefixer** - CSS vendor prefixing
 
-### Backend Integration
+### Backend
+- **FastAPI (Python)** - High-performance asynchronous web framework
+- **Pydantic** - Data validation and serialization
+- **SQLAlchemy** - ORM for database interactions
+- **Alembic** - Database migration tool
 - **Supabase** - Backend-as-a-Service for database and authentication
-- **Custom API** - RESTful API for course content and user management
+- **Poetry** - Python dependency management
 
 ## 📋 Prerequisites
 
@@ -58,70 +62,79 @@ Before running this application, make sure you have the following installed:
 
 - **Node.js** (>= 20.0.0) - JavaScript runtime
 - **npm** or **yarn** - Package manager
+- **Python** (>= 3.12) - Python runtime
+- **Poetry** - Python dependency management
 - **Git** - Version control system
 
 ## 🚀 Installation
 
 1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd the-lab-academy
-   ```
+    ```bash
+    git clone <repository-url>
+    cd the-lab-academy
+    ```
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+2. **Install frontend dependencies:**
+    ```bash
+    npm run frontend:install
+    ```
 
-3. **Set up environment variables:**
+3. **Install backend dependencies:**
+    ```bash
+    npm run backend:install
+    ```
 
-   Create a `.env` file in the root directory and configure the following variables:
+4. **Set up environment variables:**
 
-   ```env
-   # API Configuration
-   VITE_API_URL=http://localhost:8000/api
+    Copy `.env.example` to `.env` and configure the variables:
 
-   # Optional: Override default API settings
-   VITE_API_TIMEOUT=15000
-   VITE_API_MAX_RETRIES=3
-   VITE_API_RETRY_BASE_DELAY=300
-   VITE_API_RETRY_MAX_DELAY=5000
+    ```bash
+    cp .env.example .env
+    ```
 
-   # Development mode (set to 'DEBUG' to bypass authentication)
-   VITE_MODE=development
-   ```
+    Edit `.env` with your configuration values.
 
 ## 🏃 Running the Application
 
 ### Development Mode
 
-Start the development server with hot reload:
+1. **Run database migrations (first time only):**
+    ```bash
+    npm run backend:migrate
+    ```
 
-```bash
-npm run dev
-```
+2. **Start the backend server:**
+    ```bash
+    npm run backend:run
+    ```
+    The API will be available at `http://localhost:8000`.
 
-The application will be available at `http://localhost:5173` (default Vite port).
+3. **Start the frontend development server (in a new terminal):**
+    ```bash
+    npm run frontend:dev
+    ```
+    The application will be available at `http://localhost:5173` (default Vite port).
 
 ### Production Build
 
-Build the application for production:
+Build the frontend for production:
 
 ```bash
-npm run build
+npm run frontend:build
 ```
 
 Preview the production build locally:
 
 ```bash
-npm run preview
+npm run frontend:preview
 ```
 
 The preview will be available at `http://localhost:3000`.
 
 ## 🧪 Testing
 
-Run the test suite:
+### Frontend Tests
+Run the frontend test suite:
 
 ```bash
 # Run all tests
@@ -137,13 +150,20 @@ npm run test:run
 npm run test:coverage
 ```
 
+### Backend Tests
+Run the backend test suite:
+
+```bash
+npm run backend:test
+```
+
 ## 🔧 API Configuration
 
-The application communicates with a backend API for data management. The API endpoints are documented in [`docs/api_endpoints.md`](docs/api_endpoints.md).
+The application includes both frontend and backend components. The backend API is built with FastAPI and provides REST endpoints for data management. The API endpoints are documented in [`docs/api_endpoints.md`](docs/api_endpoints.md) and [`backend/docs/api_endpoints.md`](backend/docs/api_endpoints.md).
 
-### Backend Requirements
+### Backend API
 
-The application expects a REST API with the following base URL structure:
+The backend provides a REST API with the following base URL structure:
 - **Base URL**: `/api/v1`
 - **Authentication**: JWT Bearer tokens
 - **Content-Type**: `application/json`
@@ -158,58 +178,55 @@ The application expects a REST API with the following base URL structure:
 
 ### Development Setup
 
-For local development, you'll need:
-
-1. **Backend API Server** running on `http://localhost:8000`
-2. **Database** (typically PostgreSQL with Supabase)
-3. **Environment Variables** configured as shown above
+For local development, the backend runs on `http://localhost:8000` and uses Supabase for database and authentication. Ensure environment variables are configured as shown in `.env.example`.
 
 ## 🚢 Deployment
 
-### Production Deployment
+### Frontend Deployment
 
-The application is configured for deployment on platforms like Vercel, Netlify, or any static hosting service.
+The frontend is configured for deployment on static hosting platforms like Vercel, Netlify, or any static hosting service.
 
-1. **Build the application:**
-   ```bash
-   npm run build
-   ```
+1. **Build the frontend:**
+    ```bash
+    npm run frontend:build
+    ```
 
-2. **Deploy the `dist` folder** to your hosting provider.
+2. **Deploy the `frontend/dist` folder** to your hosting provider.
+
+### Backend Deployment
+
+The backend can be deployed on platforms that support Python applications, such as:
+- **Vercel** (serverless functions)
+- **Render**
+- **Fly.io**
+- **Railway**
+
+For Vercel serverless deployment, the backend includes a `vercel.json` configuration file.
 
 ### Environment Configuration
 
 For production, set the following environment variables:
 
 ```env
+# Frontend
 VITE_API_URL=https://your-api-domain.com/api
 VITE_MODE=production
+
+# Backend
+APP_NAME=the-lab-education-backend
+DEBUG=false
+SECRET_KEY=your-production-secret-key
+DATABASE_URL=your-production-database-url
+SUPABASE_URL=your-supabase-url
+SUPABASE_KEY=your-supabase-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
-### Reverse Proxy Setup
+### Monorepo Deployment
 
-If deploying behind a reverse proxy (nginx, Apache), configure it to route `/api/*` requests to your backend server:
-
-**nginx example:**
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    location / {
-        root /path/to/built/app;
-        try_files $uri $uri/ /index.html;
-    }
-
-    location /api/ {
-        proxy_pass http://your-backend-server:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
+For platforms that support monorepos, you can deploy both frontend and backend from this single repository. Configure your deployment platform to:
+- Build the frontend from the root directory
+- Deploy the backend from the `backend/` directory
 
 ## 🤝 Contributing
 

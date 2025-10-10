@@ -7,7 +7,7 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  test:
+  frontend-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,26 +19,62 @@ jobs:
       with:
         node-version: 20.x
         cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
 
-    - name: Install dependencies
+    - name: Install frontend dependencies
       run: npm ci
 
-    - name: Run linting
+    - name: Run frontend linting
       run: npm run lint 2>/dev/null || echo "No lint script found, skipping linting"
 
-    - name: Run tests
+    - name: Run frontend tests
       run: npm run test:run
 
-    - name: Run tests with coverage
+    - name: Run frontend tests with coverage
       run: npm run test:coverage
 
-    - name: Build project
+    - name: Build frontend project
       run: npm run build
 
-    - name: Upload coverage reports
+    - name: Upload frontend coverage reports
       uses: codecov/codecov-action@v4
       with:
-        file: ./coverage/coverage-final.json
-        flags: unittests
-        name: codecov-umbrella
+        file: ./frontend/coverage/coverage-final.json
+        flags: frontend-unittests
+        name: codecov-frontend
+        fail_ci_if_error: false
+
+  backend-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        poetry install
+
+    - name: Run backend tests
+      run: |
+        cd backend
+        poetry run pytest --cov=src --cov-report=xml
+
+    - name: Upload backend coverage reports
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./backend/coverage.xml
+        flags: backend-unittests
+        name: codecov-backend
         fail_ci_if_error: false
