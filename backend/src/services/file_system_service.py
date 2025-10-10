@@ -3,7 +3,7 @@ import logging
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import List, Literal, Union
 
 import aiofiles
 
@@ -20,7 +20,7 @@ class DirectoryScanResult:
 
 
 class FileSystemService:
-    def __init__(self, content_root: str | Path | None = None):
+    def __init__(self, content_root: Union[str, Path, None] = None):
         root = content_root if content_root is not None else settings.CONTENT_ROOT or "./content"
         self.content_root = Path(root).resolve()
         self.logger = get_logger(__name__)

@@ -1,6 +1,7 @@
 from uuid import UUID
 import logging
-from datetime import UTC, datetime, timedelta
+import asyncio
+from datetime import datetime, timedelta, timezone
 
 import jwt
 from jwt import ExpiredSignatureError, PyJWTError
@@ -18,9 +19,9 @@ logger = logging.getLogger(__name__)
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.now(UTC) + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(UTC) + timedelta(minutes=15)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
     to_encode.update({"exp": expire, "type": "access"})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
@@ -29,9 +30,9 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
 def create_refresh_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.now(UTC) + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(UTC) + timedelta(days=7)  # Default 7 days
+        expire = datetime.now(timezone.utc) + timedelta(days=7)  # Default 7 days
     to_encode.update({"exp": expire, "type": "refresh"})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
@@ -96,21 +97,38 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # For now, return basic user info from token
-    # TODO: Fetch full profile from database
     try:
         user_uuid = UUID(user_id)
     except ValueError:
         raise ValidationError(f"Invalid user ID format: {user_id}")
 
-    full_name = payload.get("full_name") or (email.split("@")[0] if email else "User")
-    role = payload.get("role") or "student"
+    # Fetch full user profile from Supabase database
+    supabase = get_supabase_client()
+    try:
+        response = await asyncio.get_event_loop().run_in_executor(
+            None,
+            lambda: supabase.table('profiles').select('full_name, email, role').eq('id', str(user_uuid)).execute()
+        )
+        profile_data = response.data
+        if not profile_data:
+            logger.error("User profile not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User profile not found",
+            )
+        profile = profile_data[0]
+    except Exception as e:
+        logger.error("Failed to fetch user profile")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve user profile",
+        )
 
     return User(
         user_id=user_uuid,
-        full_name=full_name,
-        email=email,
-        role=role,
+        full_name=profile['full_name'],
+        email=profile['email'],
+        role=profile['role'],
     )
 
 

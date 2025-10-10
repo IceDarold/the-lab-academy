@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession

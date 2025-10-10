@@ -63,8 +63,17 @@ def run_migrations_online() -> None:
     # Load environment variables
     from dotenv import load_dotenv
     load_dotenv()
+    # Set testing environment if not already set
+    if not os.getenv('TESTING'):
+        os.environ['TESTING'] = 'true'
+    # Import settings to handle test database URL
+    from src.core.config import settings
 
-    url = os.getenv("DATABASE_URL")
+    if settings.TESTING:
+        # Use synchronous SQLite for migrations
+        url = settings.TEST_DATABASE_URL.replace("+aiosqlite", "")
+    else:
+        url = os.getenv("DATABASE_URL")
     if not url:
         raise RuntimeError("DATABASE_URL environment variable is not set")
 

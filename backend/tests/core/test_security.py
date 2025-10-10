@@ -16,6 +16,51 @@ from src.core.security import (
 from src.schemas.user import User
 
 
+class MockSupabaseTable:
+    """Mock Supabase table for testing."""
+
+    def __init__(self, table_name, mock_data=None):
+        self.table_name = table_name
+        self.mock_data = mock_data or []
+        self._select_fields = None
+        self._eq_filters = {}
+
+    def select(self, *fields):
+        self._select_fields = fields
+        return self
+
+    def eq(self, column, value):
+        self._eq_filters[column] = value
+        return self
+
+    def execute(self):
+        """Simulate database query execution."""
+        # For profiles table, return mock profile data
+        if self.table_name == "profiles":
+            user_id = self._eq_filters.get("id")
+            if user_id:
+                # Return mock profile data matching the test expectations
+                return MagicMock(data=[{
+                    "id": str(user_id),
+                    "full_name": "Test User",
+                    "email": "test@example.com",
+                    "role": "student"
+                }])
+        return MagicMock(data=[])
+
+
+class MockSupabaseClient:
+    """Mock Supabase client for testing."""
+
+    def __init__(self):
+        self.tables = {}
+
+    def table(self, name):
+        if name not in self.tables:
+            self.tables[name] = MockSupabaseTable(name)
+        return self.tables[name]
+
+
 @pytest.fixture
 def mock_settings():
     """Mock settings for testing."""
@@ -173,7 +218,9 @@ class TestGetCurrentUser:
     async def test_get_current_user_valid(self, mock_settings, sample_user_data, sample_user):
         """Test getting current user with valid access token."""
         sample_user_data["type"] = "access"
-        with patch("jwt.decode") as mock_decode:
+        mock_client = MockSupabaseClient()
+        with patch("jwt.decode") as mock_decode, \
+             patch("src.core.security.get_supabase_client", return_value=mock_client):
             mock_decode.return_value = sample_user_data
 
             user = await get_current_user("valid-token")

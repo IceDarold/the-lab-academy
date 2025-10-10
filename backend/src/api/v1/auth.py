@@ -135,12 +135,9 @@ async def check_email(request: CheckEmailRequest):
         return {"exists": exists}
     except Exception as exc:
         logger.exception("Failed to check email existence for '%s'", request.email)
-        error_detail: Any = "Database error"
-        if settings.DEBUG:
-            error_detail = {"message": "Database error", "error": str(exc)}
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=error_detail,
+            detail="Database error",
         ) from exc
 
 
@@ -163,12 +160,9 @@ async def forgot_password(request: ForgotPasswordRequest):
         raise
     except Exception as exc:
         logger.exception("Failed to verify email existence during forgot-password for '%s'", request.email)
-        error_detail: Any = "Database error"
-        if settings.DEBUG:
-            error_detail = {"message": "Database error", "error": str(exc)}
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=error_detail,
+            detail="Database error",
         ) from exc
 
     # Send reset email using regular client
@@ -180,12 +174,9 @@ async def forgot_password(request: ForgotPasswordRequest):
         return {"message": "Password reset email sent"}
     except Exception as exc:
         logger.exception("Failed to send reset password email for '%s'", request.email)
-        error_detail: Any = "Failed to send reset email"
-        if settings.DEBUG:
-            error_detail = {"message": "Failed to send reset email", "error": str(exc)}
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=error_detail,
+            detail="Failed to send reset email",
         ) from exc
 
 
