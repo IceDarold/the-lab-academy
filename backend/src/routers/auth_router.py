@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,6 +20,7 @@ from uuid import UUID
 logger = get_logger(__name__)
 
 router = APIRouter()
+ACCESS_TOKEN_TTL_SECONDS = 15 * 60
 
 @router.options("/login")
 async def options_login(request: Request):
@@ -82,6 +83,8 @@ async def login(
         # Create JWT tokens
         access_token = create_access_token(data={"sub": user_id, "email": email})
         refresh_token = create_refresh_token(data={"sub": user_id, "email": email})
+        expires_in = ACCESS_TOKEN_TTL_SECONDS
+        expires_at = int((datetime.now(timezone.utc) + timedelta(seconds=expires_in)).timestamp() * 1000)
         logger.debug(f"JWT tokens created for user: {email}")
 
         # Store refresh token in session
@@ -106,7 +109,13 @@ async def login(
         raise HTTPException(status_code=500, detail="Failed to complete login process")
 
     logger.info(f"User {email} logged in successfully")
-    return {"access_token": access_token, "token_type": "bearer"}
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        refresh_token=refresh_token,
+        expires_in=expires_in,
+        expires_at=expires_at,
+    )
 
 @router.post("/register", response_model=Token)
 @auth_limiter.limit(REGISTER_RATE_LIMIT)
@@ -155,8 +164,26 @@ async def register(
 
         # Step 4: Create access token
         access_token = create_access_token(data={"sub": supabase_user_id, "email": user.email})
+        refresh_token = create_refresh_token(data={"sub": supabase_user_id, "email": user.email})
+        expires_in = ACCESS_TOKEN_TTL_SECONDS
+        expires_at = int((datetime.now(timezone.utc) + timedelta(seconds=expires_in)).timestamp() * 1000)
+
+        client_ip = request.client.host if request else None
+        await SessionService.create_session(
+            db=db,
+            user_id=UUID(supabase_user_id),
+            refresh_token=refresh_token,
+            ip_address=client_ip
+        )
+
         logger.info(f"Registration successful for user: {email}")
-        return {"access_token": access_token, "token_type": "bearer"}
+        return Token(
+            access_token=access_token,
+            token_type="bearer",
+            refresh_token=refresh_token,
+            expires_in=expires_in,
+            expires_at=expires_at,
+        )
 
     except DatabaseError as e:
         logger.error(f"Database error during registration for user {email}: {str(e)}")

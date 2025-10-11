@@ -160,6 +160,9 @@ class TestLogin:
         data = response.json()
         assert data["access_token"] == "access_token"
         assert data["token_type"] == "bearer"
+        assert data["refresh_token"] == "refresh_token"
+        assert data["expires_in"] == 15 * 60
+        assert isinstance(data["expires_at"], int)
 
         # Verify calls
         mock_supabase_client.auth.sign_in_with_password.assert_called_once()
@@ -224,7 +227,7 @@ class TestLogin:
 
 class TestRegister:
     @pytest.mark.asyncio
-    async def test_register_success(self, async_client, mock_supabase_client, mock_user_service, mock_security_functions, mock_db):
+    async def test_register_success(self, async_client, mock_supabase_client, mock_user_service, mock_session_service, mock_security_functions, mock_db):
         """Test successful registration."""
         # Mock Supabase signup
         auth_response = MagicMock()
@@ -250,11 +253,16 @@ class TestRegister:
         data = response.json()
         assert data["access_token"] == "access_token"
         assert data["token_type"] == "bearer"
+        assert data["refresh_token"] == "refresh_token"
+        assert data["expires_in"] == 15 * 60
+        assert isinstance(data["expires_at"], int)
 
         # Verify calls
         mock_user_service.create_user_with_id.assert_called_once()
+        mock_session_service.create_session.assert_called_once()
         mock_supabase_client.auth.sign_up.assert_called_once()
         mock_security_functions['create_access_token'].assert_called_once()
+        mock_security_functions['create_refresh_token'].assert_called_once()
 
     @pytest.mark.asyncio
     async def test_register_supabase_failure_with_rollback(self, async_client, mock_supabase_client, mock_user_service, mock_supabase_admin_client):

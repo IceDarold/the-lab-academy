@@ -36,7 +36,7 @@ describe('Auth Service', () => {
 
       const result = await login('test@example.com', 'password123')
 
-      expect(mockApi.post).toHaveBeenCalledWith('/v1/auth/login', expect.any(URLSearchParams), {
+      expect(mockApi.post).toHaveBeenCalledWith('/auth/login', expect.any(URLSearchParams), {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
@@ -92,7 +92,7 @@ describe('Auth Service', () => {
 
       const result = await register('John Doe', 'john@example.com', 'password123')
 
-      expect(mockApi.post).toHaveBeenCalledWith('/v1/auth/register', {
+      expect(mockApi.post).toHaveBeenCalledWith('/auth/register', {
         full_name: 'John Doe',
         email: 'john@example.com',
         password: 'password123',
@@ -149,7 +149,7 @@ describe('Auth Service', () => {
 
       const result = await getMe()
 
-      expect(mockApi.get).toHaveBeenCalledWith('/v1/auth/me')
+      expect(mockApi.get).toHaveBeenCalledWith(/auth/me')
       expect(result).toEqual({
         id: 'user-123',
         fullName: 'John Doe',
@@ -210,7 +210,7 @@ describe('Auth Service', () => {
 
       const result = await checkEmail('existing@example.com')
 
-      expect(mockApi.post).toHaveBeenCalledWith('/v1/auth/check-email', {
+      expect(mockApi.post).toHaveBeenCalledWith('/auth/check-email', {
         email: 'existing@example.com',
       })
       expect(result).toBe(true)
@@ -241,7 +241,7 @@ describe('Auth Service', () => {
 
       await checkEmail('Test@Example.COM')
 
-      expect(mockApi.post).toHaveBeenCalledWith('/v1/auth/check-email', {
+      expect(mockApi.post).toHaveBeenCalledWith('/auth/check-email', {
         email: 'test@example.com',
       })
     })
@@ -266,7 +266,7 @@ describe('Auth Service', () => {
 
       await expect(forgotPassword('test@example.com')).resolves.toBeUndefined()
 
-      expect(mockApi.post).toHaveBeenCalledWith('/v1/auth/forgot-password', {
+      expect(mockApi.post).toHaveBeenCalledWith('/auth/forgot-password', {
         email: 'test@example.com',
       })
     })
@@ -285,7 +285,7 @@ describe('Auth Service', () => {
 
       await expect(resetPassword('reset-token-123', 'newpassword123')).resolves.toBeUndefined()
 
-      expect(mockApi.post).toHaveBeenCalledWith('/v1/auth/reset-password', {
+      expect(mockApi.post).toHaveBeenCalledWith('/auth/reset-password', {
         token: 'reset-token-123',
         newPassword: 'newpassword123',
       })
