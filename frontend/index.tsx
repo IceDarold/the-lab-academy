@@ -6,7 +6,7 @@ import { Toaster } from 'react-hot-toast';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import FullScreenLoader from './components/FullScreenLoader';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AnalyticsTracker from './components/AnalyticsTracker';
 import { Analytics } from '@vercel/analytics/react';
