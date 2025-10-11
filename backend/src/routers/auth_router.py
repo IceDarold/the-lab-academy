@@ -247,7 +247,7 @@ async def refresh_token(
 
         # Calculate expiration times
         expires_in = 15 * 60  # 15 minutes
-        expires_at = int((datetime.now(UTC).timestamp() + expires_in) * 1000)
+        expires_at = int((datetime.now(timezone.utc).timestamp() + expires_in) * 1000)
 
         logger.info(f"Token refresh successful for user: {user_id}")
         return RefreshTokenResponse(

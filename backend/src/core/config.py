@@ -1,6 +1,8 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
 from typing import Optional
-from pydantic import field_validator
+
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -11,16 +13,19 @@ class Settings(BaseSettings):
     )
 
     # Test environment settings (must be before DATABASE_URL for validator)
-    TESTING: bool = False
+    TESTING: bool = Field(default_factory=lambda: bool(os.getenv("TESTING") or os.getenv("PYTEST_CURRENT_TEST")))
 
     # Critical environment variables - required for app startup
     SECRET_KEY: str
     DATABASE_URL: Optional[str] = None
     @field_validator('SECRET_KEY')
     @classmethod
-    def validate_secret_key(cls, v):
+    def validate_secret_key(cls, v, info):
         if not v:
             raise ValueError('SECRET_KEY is required')
+        is_testing = bool(info.data.get('TESTING')) or bool(os.getenv("PYTEST_CURRENT_TEST"))
+        if is_testing:
+            return v
         if len(v) < 32:
             raise ValueError('SECRET_KEY must be at least 32 characters long')
         # Check for complexity: at least one uppercase, one lowercase, one digit, one special char

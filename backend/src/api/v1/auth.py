@@ -127,8 +127,10 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Token:
 
     session = getattr(response, "session", None)
     token = getattr(session, "access_token", None)
-    refresh_token = getattr(session, "refresh_token", None)
-    expires_in = getattr(session, "expires_in", None)
+    raw_refresh_token = getattr(session, "refresh_token", None)
+    refresh_token = raw_refresh_token if isinstance(raw_refresh_token, str) else None
+    raw_expires_in = getattr(session, "expires_in", None)
+    expires_in = raw_expires_in if isinstance(raw_expires_in, int) else None
     if not session or not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -162,7 +164,7 @@ async def check_email(request: CheckEmailRequest):
         logger.exception("Failed to check email existence for '%s'", request.email)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database error",
+            detail={"error": "Database error"},
         ) from exc
 
 
@@ -187,7 +189,7 @@ async def forgot_password(request: ForgotPasswordRequest):
         logger.exception("Failed to verify email existence during forgot-password for '%s'", request.email)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database error",
+            detail={"error": "Database error"},
         ) from exc
 
     # Send reset email using regular client
@@ -201,7 +203,7 @@ async def forgot_password(request: ForgotPasswordRequest):
         logger.exception("Failed to send reset password email for '%s'", request.email)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to send reset email",
+            detail={"message": "Failed to send reset email"},
         ) from exc
 
 
