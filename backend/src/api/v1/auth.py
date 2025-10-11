@@ -10,6 +10,7 @@ from src.schemas.token import Token
 from src.schemas.user import CheckEmailRequest, ForgotPasswordRequest, ResetPasswordRequest, User, UserCreate
 from src.core.logging import get_logger
 from src.core.config import settings
+from src.schemas.user import _normalize_email
 
 router = APIRouter()
 logger = get_logger(__name__)
@@ -92,11 +93,28 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Token:
     supabase = get_supabase_client()
 
     try:
+        email = _normalize_email(form_data.username.strip())
+    except ValueError as exc:
+        logger.warning(f"Login attempt with invalid email format: {form_data.username} -> {str(exc)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid email or password",
+        ) from exc
+
+    password = form_data.password or ""
+    if not password.strip():
+        logger.warning("Login attempt with empty password")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid email or password",
+        )
+
+    try:
         response = await _finalize_request(
             supabase.auth.sign_in_with_password(
                 {
-                    "email": form_data.username,
-                    "password": form_data.password,
+                    "email": email,
+                    "password": password,
                 }
             )
         )
