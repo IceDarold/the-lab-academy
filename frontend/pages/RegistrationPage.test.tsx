@@ -7,7 +7,7 @@ import RegistrationPage from './RegistrationPage'
 import { useAuth } from '../src/contexts/AuthContext'
 
 // Mock the auth context
-vi.mock('../contexts/AuthContext', () => ({
+vi.mock('../src/contexts/AuthContext', () => ({
   useAuth: vi.fn(),
 }))
 

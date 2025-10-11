@@ -41,7 +41,7 @@ vi.mock('../../services/admin.service', () => ({
 }))
 
 // Mock lesson parser
-vi.mock('../../lib/admin-utils/lessonParser', () => {
+vi.mock('../../src/lib/admin-utils/lessonParser', () => {
   const mock = vi.fn((content) => ({
     metadata: { title: 'Test Lesson', status: 'published' },
     cells: [{ type: 'text', content: 'Test content' }]

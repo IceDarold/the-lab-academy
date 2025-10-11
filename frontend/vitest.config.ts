@@ -9,6 +9,18 @@ export default defineConfig(async () => {
     test: {
       globals: true,
       environment: 'jsdom',
+      include: [
+        'src/**/*.{test,spec}.{js,ts,jsx,tsx}',
+        'components/**/*.{test,spec}.{js,ts,jsx,tsx}',
+        'pages/**/*.{test,spec}.{js,ts,jsx,tsx}',
+        'services/**/*.{test,spec}.{js,ts,jsx,tsx}',
+      ],
+      exclude: [
+        'tests/**/*',
+        'e2e/**/*',
+        'playwright.config.*',
+        'node_modules/**/*',
+      ],
       setupFiles: ['./src/test/setup.ts'],
       css: true,
       coverage: {

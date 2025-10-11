@@ -4,7 +4,7 @@ import ProtectedRoute from './ProtectedRoute'
 
 // Mock useAuth hook
 const mockUseAuth = vi.fn()
-vi.mock('../../contexts/AuthContext', () => ({
+vi.mock('../../src/contexts/AuthContext', () => ({
   useAuth: () => mockUseAuth(),
 }))
 

@@ -1,5 +1,10 @@
 import '@testing-library/jest-dom'
 
+// Provide default environment variables expected by integration tests
+if (!process.env.VITE_API_URL) {
+  process.env.VITE_API_URL = '/api'
+}
+
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

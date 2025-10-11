@@ -8,7 +8,7 @@ import { clearStoredTokens, getStoredTokens, storeTokens } from '../../lib/token
 import api from '../../lib/api.ts'
 
 // Mock API
-vi.mock('../../../lib/api.ts', () => ({
+vi.mock('../../lib/api.ts', () => ({
   default: {
     post: vi.fn(),
     get: vi.fn(),
@@ -21,7 +21,7 @@ vi.mock('../../../lib/api.ts', () => ({
 }))
 
 // Mock token storage
-vi.mock('../../../lib/tokenStorage.ts', () => ({
+vi.mock('../../lib/tokenStorage.ts', () => ({
   clearStoredTokens: vi.fn(),
   getStoredTokens: vi.fn(),
   storeTokens: vi.fn(),
@@ -77,6 +77,7 @@ const TestApp = () => {
 describe('Auth Integration Flows', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    process.env.VITE_API_URL = 'http://localhost:8000'
     mockGetStoredTokens.mockReturnValue(null)
     api.defaults.headers.common = {}
   })
