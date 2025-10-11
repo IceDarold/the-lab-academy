@@ -4,7 +4,7 @@ import { motion, Variants } from 'framer-motion';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import CourseCard from '../components/CourseCard';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../src/contexts/AuthContext';
 import Modal from '../components/Modal';
 import CourseDetailView from '../components/CourseDetailView';
 import { getMyCourses } from '../services/courses.service';

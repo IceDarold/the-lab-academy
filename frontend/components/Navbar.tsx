@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Button from './Button';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../src/contexts/AuthContext';
 
 const Navbar = () => {
   const [isProfileMenuOpen, setProfileMenuOpen] = useState(false);

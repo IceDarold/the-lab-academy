@@ -8,7 +8,7 @@ import { Lesson, TextCell } from '../types/lessons';
 import LessonPageSkeleton from '../components/LessonPageSkeleton';
 import Card from '../components/Card';
 import CellRenderer from '../components/CellRenderer';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../src/contexts/AuthContext';
 import { useAnalytics } from '../src/hooks/useAnalytics';
 
 // To avoid TypeScript errors since Pyodide is loaded from CDN script tags

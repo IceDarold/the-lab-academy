@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../src/contexts/AuthContext';
 import FullScreenLoader from '../FullScreenLoader';
 
 interface ProtectedRouteProps {

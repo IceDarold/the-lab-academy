@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { forwardRef } from 'react'
 import { BrowserRouter } from 'react-router-dom'
 import RegistrationPage from './RegistrationPage'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../src/contexts/AuthContext'
 
 // Mock the auth context
 vi.mock('../contexts/AuthContext', () => ({

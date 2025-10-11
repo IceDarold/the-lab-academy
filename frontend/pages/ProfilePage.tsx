@@ -2,7 +2,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../src/contexts/AuthContext';
 import { UpdateProfileSchema, UpdateProfileData, ChangePasswordSchema, ChangePasswordData } from '../lib/validators/auth';
 import Card from '../components/Card';
 import Input from '../components/Input';

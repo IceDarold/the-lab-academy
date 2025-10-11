@@ -7,7 +7,7 @@ import Input from '../components/Input';
 import Card from '../components/Card';
 import SocialLoginButton from '../components/SocialLoginButton';
 import Modal from '../components/Modal';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../src/contexts/AuthContext';
 import { RegisterSchema, RegisterData } from '../lib/validators/auth';
 
 const RegistrationPage = () => {
