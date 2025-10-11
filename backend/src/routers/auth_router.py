@@ -1,5 +1,5 @@
-from datetime import datetime, timezone, timedelta
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from datetime import datetime, timezone
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from slowapi import Limiter
@@ -30,21 +30,6 @@ import asyncio
 logger = get_logger(__name__)
 
 router = APIRouter()
-ACCESS_TOKEN_TTL_SECONDS = 15 * 60
-
-
-async def _finalize_request(result):
-    if asyncio.iscoroutine(result):
-        return await result
-
-    execute = getattr(result, "execute", None)
-    if callable(execute):
-        exec_result = execute()
-        if asyncio.iscoroutine(exec_result):
-            return await exec_result
-        return exec_result
-
-    return result
 
 @router.options("/login")
 async def options_login(request: Request):

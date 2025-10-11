@@ -149,7 +149,7 @@ describe('Auth Service', () => {
 
       const result = await getMe()
 
-      expect(mockApi.get).toHaveBeenCalledWith(/auth/me')
+      expect(mockApi.get).toHaveBeenCalledWith('/auth/me')
       expect(result).toEqual({
         id: 'user-123',
         fullName: 'John Doe',
