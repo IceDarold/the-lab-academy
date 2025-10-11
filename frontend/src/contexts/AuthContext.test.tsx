@@ -3,8 +3,8 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AuthProvider, useAuth } from './AuthContext'
 import { login as loginService, register as registerService, logout as logoutService, getMe, checkEmail as checkEmailService } from '../services/auth.service'
-import { clearStoredTokens, getStoredTokens, storeTokens } from '../lib/tokenStorage'
-import api from '../lib/api'
+import { clearStoredTokens, getStoredTokens, storeTokens } from './lib/tokenStorage'
+import api from './lib/api'
 
 // Mock all dependencies
 vi.mock('../services/auth.service', () => ({

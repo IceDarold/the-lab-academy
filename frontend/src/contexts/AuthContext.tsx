@@ -9,14 +9,14 @@ import {
   checkEmail as checkEmailService,
   getMe,
 } from '../services/auth.service';
-import api from '../lib/api';
-import { clearStoredTokens, getStoredTokens, storeTokens, StoredTokens } from '../lib/tokenStorage';
+import api from './lib/api';
+import { clearStoredTokens, getStoredTokens, storeTokens, StoredTokens } from './lib/tokenStorage';
 import {
   AUTH_EVENTS,
   dispatchAuthEvent,
   LogoutEventDetail,
   TokenRefreshedDetail,
-} from '../lib/authEvents';
+} from './lib/authEvents';
 
 const extractErrorMessage = (error: unknown): string => {
   if (isAxiosError(error)) {

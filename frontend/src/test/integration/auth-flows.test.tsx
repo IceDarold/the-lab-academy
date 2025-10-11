@@ -4,8 +4,8 @@ import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider, useAuth } from '../../contexts/AuthContext.tsx'
 import { login as loginService, register as registerService, getMe, checkEmail } from '../../../services/auth.service.ts'
-import { clearStoredTokens, getStoredTokens, storeTokens } from '../../../lib/tokenStorage.ts'
-import api from '../../../lib/api.ts'
+import { clearStoredTokens, getStoredTokens, storeTokens } from '../../lib/tokenStorage.ts'
+import api from '../../lib/api.ts'
 
 // Mock API
 vi.mock('../../../lib/api.ts', () => ({

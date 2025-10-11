@@ -6,7 +6,7 @@ import Input from '../components/Input';
 import Card from '../components/Card';
 import SocialLoginButton from '../components/SocialLoginButton';
 import { useAuth } from '../src/contexts/AuthContext';
-import { LoginSchema, LoginData } from '../lib/validators/auth';
+import { LoginSchema, LoginData } from '../src/lib/validators/auth';
 
 const LoginPage = () => {
   const [rememberMe, setRememberMe] = useState(false);

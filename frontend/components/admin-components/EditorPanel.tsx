@@ -6,7 +6,7 @@ import 'prismjs/components/prism-markdown';
 import { FileText, Code, Eye, Settings, Edit, X, Check, BookOpen, Lock, Pencil, CircleDot, Folder } from 'lucide-react';
 
 import type { ContentNode, ParsedLesson } from '../../types/admin';
-import { parseLesson } from '../../lib/admin-utils/lessonParser';
+import { parseLesson } from '../../src/lib/admin-utils/lessonParser';
 import { getConfigFile, updateConfigFile } from '../../services/admin.service';
 import { mockLessonRawContent } from './admin/mock-lesson-raw';
 import CellRenderer from './admin/lessons/CellRenderer';
