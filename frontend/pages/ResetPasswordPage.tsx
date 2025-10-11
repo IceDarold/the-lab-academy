@@ -5,7 +5,7 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import Card from '../components/Card';
 import { resetPassword } from '../services/auth.service';
-import { ResetPasswordSchema, ResetPasswordData } from '../src/lib/validators/auth';
+import { ResetPasswordSchema, ResetPasswordData } from '@/src/lib/validators/auth';
 import toast from 'react-hot-toast';
 
 const ResetPasswordPage = () => {
