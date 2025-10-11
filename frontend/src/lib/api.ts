@@ -81,10 +81,6 @@ const shouldSkip401Handling = (config?: RetriableRequestConfig): boolean => {
     '/auth/register',
     '/auth/refresh',
     '/auth/logout',
-    '/v1/auth/login',
-    '/v1/auth/register',
-    '/v1/auth/refresh',
-    '/v1/auth/logout',
   ].some((endpoint) =>
     normalizedUrl.includes(endpoint)
   );

@@ -1,6 +1,16 @@
 from .content_node import ContentNode
 from .lesson import Lesson, LessonCell, LessonCompleteResponse, LessonCompleteRequest
-from .user import UserCreate, User, UserUpdate, UserResponse, UsersListResponse, UserFilter
+from .user import (
+    UserCreate,
+    User,
+    UserUpdate,
+    UserResponse,
+    UsersListResponse,
+    UserFilter,
+    CheckEmailRequest,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+)
 from .analytics import TrackEventRequest, ActivityDetailsResponse, DailyActivity
 from .token import Token, RefreshTokenRequest, RefreshTokenResponse
 
@@ -16,6 +26,9 @@ __all__ = [
     "UserResponse",
     "UsersListResponse",
     "UserFilter",
+    "CheckEmailRequest",
+    "ForgotPasswordRequest",
+    "ResetPasswordRequest",
     "TrackEventRequest",
     "ActivityDetailsResponse",
     "DailyActivity",

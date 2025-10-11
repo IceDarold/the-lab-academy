@@ -7,6 +7,7 @@ class Token(BaseModel):
     token_type: str
     refresh_token: Optional[str] = None
     expires_in: Optional[int] = None
+    expires_at: Optional[int] = None
 
 
 class RefreshTokenRequest(BaseModel):

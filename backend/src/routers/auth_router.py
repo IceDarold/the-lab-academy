@@ -1,5 +1,5 @@
-from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, Request
+from datetime import datetime, timezone, timedelta
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from slowapi import Limiter
@@ -7,7 +7,16 @@ from slowapi.util import get_remote_address
 from src.services.user_service import UserService
 from src.services.session_service import SessionService
 from src.services.profile_service import ProfileService
-from src.schemas import UserCreate, User, Token, RefreshTokenRequest, RefreshTokenResponse
+from src.schemas import (
+    UserCreate,
+    User,
+    Token,
+    RefreshTokenRequest,
+    RefreshTokenResponse,
+    CheckEmailRequest,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+)
 from src.dependencies import get_db, get_current_user
 from src.core.security import create_access_token, create_refresh_token, verify_refresh_token
 from src.core.logging import get_logger
@@ -16,10 +25,26 @@ from src.core.supabase_client import get_resilient_supabase_client, get_resilien
 from src.core.rate_limiting import auth_limiter, LOGIN_RATE_LIMIT, REGISTER_RATE_LIMIT, REFRESH_RATE_LIMIT
 import uuid
 from uuid import UUID
+import asyncio
 
 logger = get_logger(__name__)
 
 router = APIRouter()
+ACCESS_TOKEN_TTL_SECONDS = 15 * 60
+
+
+async def _finalize_request(result):
+    if asyncio.iscoroutine(result):
+        return await result
+
+    execute = getattr(result, "execute", None)
+    if callable(execute):
+        exec_result = execute()
+        if asyncio.iscoroutine(exec_result):
+            return await exec_result
+        return exec_result
+
+    return result
 
 @router.options("/login")
 async def options_login(request: Request):
@@ -82,6 +107,8 @@ async def login(
         # Create JWT tokens
         access_token = create_access_token(data={"sub": user_id, "email": email})
         refresh_token = create_refresh_token(data={"sub": user_id, "email": email})
+        expires_in = ACCESS_TOKEN_TTL_SECONDS
+        expires_at = int((datetime.now(timezone.utc) + timedelta(seconds=expires_in)).timestamp() * 1000)
         logger.debug(f"JWT tokens created for user: {email}")
 
         # Store refresh token in session
@@ -106,7 +133,13 @@ async def login(
         raise HTTPException(status_code=500, detail="Failed to complete login process")
 
     logger.info(f"User {email} logged in successfully")
-    return {"access_token": access_token, "token_type": "bearer"}
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        refresh_token=refresh_token,
+        expires_in=expires_in,
+        expires_at=expires_at,
+    )
 
 @router.post("/register", response_model=Token)
 @auth_limiter.limit(REGISTER_RATE_LIMIT)
@@ -155,8 +188,26 @@ async def register(
 
         # Step 4: Create access token
         access_token = create_access_token(data={"sub": supabase_user_id, "email": user.email})
+        refresh_token = create_refresh_token(data={"sub": supabase_user_id, "email": user.email})
+        expires_in = ACCESS_TOKEN_TTL_SECONDS
+        expires_at = int((datetime.now(timezone.utc) + timedelta(seconds=expires_in)).timestamp() * 1000)
+
+        client_ip = request.client.host if request else None
+        await SessionService.create_session(
+            db=db,
+            user_id=UUID(supabase_user_id),
+            refresh_token=refresh_token,
+            ip_address=client_ip
+        )
+
         logger.info(f"Registration successful for user: {email}")
-        return {"access_token": access_token, "token_type": "bearer"}
+        return Token(
+            access_token=access_token,
+            token_type="bearer",
+            refresh_token=refresh_token,
+            expires_in=expires_in,
+            expires_at=expires_at,
+        )
 
     except DatabaseError as e:
         logger.error(f"Database error during registration for user {email}: {str(e)}")
@@ -272,3 +323,83 @@ async def refresh_token(
 @router.get("/me", response_model=User)
 async def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
+
+
+@router.post("/check-email")
+async def check_email(request: CheckEmailRequest):
+    supabase = get_resilient_supabase_admin_client()
+
+    try:
+        profile_response = await _finalize_request(
+            supabase.table("profiles").select("id").eq("email", request.email).execute()
+        )
+        exists = bool(getattr(profile_response, "data", []))
+        return {"exists": exists}
+    except Exception as exc:
+        logger.exception("Failed to check email existence for '%s'", request.email)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Database error"},
+        ) from exc
+
+
+@router.post("/forgot-password")
+async def forgot_password(request: ForgotPasswordRequest):
+    admin_client = get_resilient_supabase_admin_client()
+    try:
+        profile_response = await _finalize_request(
+            admin_client.table("profiles").select("id").eq("email", request.email).execute()
+        )
+        exists = bool(getattr(profile_response, "data", []))
+        if not exists:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Email not found",
+            )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Failed to verify email existence during forgot-password for '%s'", request.email)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Database error"},
+        ) from exc
+
+    supabase_client = get_resilient_supabase_client()
+    try:
+        await _finalize_request(
+            supabase_client.auth.reset_password_for_email(request.email)
+        )
+        return {"message": "Password reset email sent"}
+    except Exception as exc:
+        logger.exception("Failed to send reset password email for '%s'", request.email)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"message": "Failed to send reset email"},
+        ) from exc
+
+
+@router.post("/reset-password")
+async def reset_password(request: ResetPasswordRequest):
+    supabase = get_resilient_supabase_client()
+
+    try:
+        await _finalize_request(
+            supabase.auth.verify_otp(type="recovery", token=request.token)
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired token",
+        ) from exc
+
+    try:
+        await _finalize_request(
+            supabase.auth.update_user({"password": request.new_password})
+        )
+        return {"message": "Password updated successfully"}
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update password",
+        ) from exc

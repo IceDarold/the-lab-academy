@@ -160,6 +160,9 @@ class TestLogin:
         data = response.json()
         assert data["access_token"] == "access_token"
         assert data["token_type"] == "bearer"
+        assert data["refresh_token"] == "refresh_token"
+        assert data["expires_in"] == 15 * 60
+        assert isinstance(data["expires_at"], int)
 
         # Verify calls
         mock_supabase_client.auth.sign_in_with_password.assert_called_once()
@@ -224,7 +227,7 @@ class TestLogin:
 
 class TestRegister:
     @pytest.mark.asyncio
-    async def test_register_success(self, async_client, mock_supabase_client, mock_user_service, mock_security_functions, mock_db):
+    async def test_register_success(self, async_client, mock_supabase_client, mock_user_service, mock_session_service, mock_security_functions, mock_db):
         """Test successful registration."""
         # Mock Supabase signup
         auth_response = MagicMock()
@@ -250,12 +253,151 @@ class TestRegister:
         data = response.json()
         assert data["access_token"] == "access_token"
         assert data["token_type"] == "bearer"
+        assert data["refresh_token"] == "refresh_token"
+        assert data["expires_in"] == 15 * 60
+        assert isinstance(data["expires_at"], int)
 
         # Verify calls
         mock_user_service.create_user_with_id.assert_called_once()
+        mock_session_service.create_session.assert_called_once()
         mock_supabase_client.auth.sign_up.assert_called_once()
         mock_security_functions['create_access_token'].assert_called_once()
+        mock_security_functions['create_refresh_token'].assert_called_once()
 
+
+class TestCheckEmail:
+    @pytest.mark.asyncio
+    async def test_check_email_exists(self, async_client, mock_supabase_admin_client):
+        profiles_table = MagicMock()
+        select_mock = MagicMock()
+        select_mock.eq = MagicMock(return_value=select_mock)
+        select_mock.execute = AsyncMock(return_value=MagicMock(data=[{"id": "some-id"}]))
+        profiles_table.select = MagicMock(return_value=select_mock)
+        mock_supabase_admin_client.table = MagicMock(return_value=profiles_table)
+
+        response = await async_client.post("/auth/check-email", json={"email": "user@example.com"})
+
+        assert response.status_code == 200
+        assert response.json()["exists"] is True
+
+    @pytest.mark.asyncio
+    async def test_check_email_not_exists(self, async_client, mock_supabase_admin_client):
+        profiles_table = MagicMock()
+        select_mock = MagicMock()
+        select_mock.eq = MagicMock(return_value=select_mock)
+        select_mock.execute = AsyncMock(return_value=MagicMock(data=[]))
+        profiles_table.select = MagicMock(return_value=select_mock)
+        mock_supabase_admin_client.table = MagicMock(return_value=profiles_table)
+
+        response = await async_client.post("/auth/check-email", json={"email": "missing@example.com"})
+
+        assert response.status_code == 200
+        assert response.json()["exists"] is False
+
+    @pytest.mark.asyncio
+    async def test_check_email_database_error(self, async_client, mock_supabase_admin_client):
+        profiles_table = MagicMock()
+        select_mock = MagicMock()
+        select_mock.eq = MagicMock(return_value=select_mock)
+        select_mock.execute = AsyncMock(side_effect=Exception("Database error"))
+        profiles_table.select = MagicMock(return_value=select_mock)
+        mock_supabase_admin_client.table = MagicMock(return_value=profiles_table)
+
+        response = await async_client.post("/auth/check-email", json={"email": "user@example.com"})
+
+        assert response.status_code == 500
+        assert response.json()["detail"]["error"] == "Database error"
+
+
+class TestForgotPassword:
+    @pytest.mark.asyncio
+    async def test_forgot_password_success(self, async_client, mock_supabase_admin_client, mock_supabase_client):
+        profiles_table = MagicMock()
+        select_mock = MagicMock()
+        select_mock.eq = MagicMock(return_value=select_mock)
+        select_mock.execute = AsyncMock(return_value=MagicMock(data=[{"id": "some-id"}]))
+        profiles_table.select = MagicMock(return_value=select_mock)
+        mock_supabase_admin_client.table = MagicMock(return_value=profiles_table)
+        mock_supabase_client.auth.reset_password_for_email = AsyncMock()
+
+        response = await async_client.post("/auth/forgot-password", json={"email": "user@example.com"})
+
+        assert response.status_code == 200
+        assert response.json()["message"] == "Password reset email sent"
+
+    @pytest.mark.asyncio
+    async def test_forgot_password_email_not_found(self, async_client, mock_supabase_admin_client):
+        profiles_table = MagicMock()
+        select_mock = MagicMock()
+        select_mock.eq = MagicMock(return_value=select_mock)
+        select_mock.execute = AsyncMock(return_value=MagicMock(data=[]))
+        profiles_table.select = MagicMock(return_value=select_mock)
+        mock_supabase_admin_client.table = MagicMock(return_value=profiles_table)
+
+        response = await async_client.post("/auth/forgot-password", json={"email": "missing@example.com"})
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Email not found"
+
+    @pytest.mark.asyncio
+    async def test_forgot_password_database_error(self, async_client, mock_supabase_admin_client):
+        profiles_table = MagicMock()
+        select_mock = MagicMock()
+        select_mock.eq = MagicMock(return_value=select_mock)
+        select_mock.execute = AsyncMock(side_effect=Exception("Database error"))
+        profiles_table.select = MagicMock(return_value=select_mock)
+        mock_supabase_admin_client.table = MagicMock(return_value=profiles_table)
+
+        response = await async_client.post("/auth/forgot-password", json={"email": "user@example.com"})
+
+        assert response.status_code == 500
+        assert response.json()["detail"]["error"] == "Database error"
+
+    @pytest.mark.asyncio
+    async def test_forgot_password_send_email_error(self, async_client, mock_supabase_admin_client, mock_supabase_client):
+        profiles_table = MagicMock()
+        select_mock = MagicMock()
+        select_mock.eq = MagicMock(return_value=select_mock)
+        select_mock.execute = AsyncMock(return_value=MagicMock(data=[{"id": "some-id"}]))
+        profiles_table.select = MagicMock(return_value=select_mock)
+        mock_supabase_admin_client.table = MagicMock(return_value=profiles_table)
+        mock_supabase_client.auth.reset_password_for_email = AsyncMock(side_effect=Exception("Send error"))
+
+        response = await async_client.post("/auth/forgot-password", json={"email": "user@example.com"})
+
+        assert response.status_code == 500
+        assert response.json()["detail"]["message"] == "Failed to send reset email"
+
+
+class TestResetPassword:
+    @pytest.mark.asyncio
+    async def test_reset_password_success(self, async_client, mock_supabase_client):
+        mock_supabase_client.auth.verify_otp = AsyncMock()
+        mock_supabase_client.auth.update_user = AsyncMock()
+
+        response = await async_client.post("/auth/reset-password", json={"token": "token", "new_password": "newpass123"})
+
+        assert response.status_code == 200
+        assert response.json()["message"] == "Password updated successfully"
+
+    @pytest.mark.asyncio
+    async def test_reset_password_invalid_token(self, async_client, mock_supabase_client):
+        mock_supabase_client.auth.verify_otp = AsyncMock(side_effect=Exception("Invalid token"))
+
+        response = await async_client.post("/auth/reset-password", json={"token": "bad", "new_password": "pass12345"})
+
+        assert response.status_code == 400
+        assert "Invalid or expired token" in response.json()["detail"]
+
+    @pytest.mark.asyncio
+    async def test_reset_password_update_error(self, async_client, mock_supabase_client):
+        mock_supabase_client.auth.verify_otp = AsyncMock()
+        mock_supabase_client.auth.update_user = AsyncMock(side_effect=Exception("Update error"))
+
+        response = await async_client.post("/auth/reset-password", json={"token": "token", "new_password": "pass12345"})
+
+        assert response.status_code == 500
+        assert "Failed to update password" in response.json()["detail"]
     @pytest.mark.asyncio
     async def test_register_supabase_failure_with_rollback(self, async_client, mock_supabase_client, mock_user_service, mock_supabase_admin_client):
         """Test registration with Supabase failure and rollback."""

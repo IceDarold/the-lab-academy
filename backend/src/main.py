@@ -19,7 +19,8 @@ from src.core.errors import (
     ExternalServiceError,
 )
 from src.routers.health_router import router as health_router
-from src.api.v1.auth import router as auth_router
+from src.api.v1.auth import router as api_v1_auth_router
+from src.routers.auth_router import router as auth_router
 from src.api.v1.admin import router as admin_router
 from src.api.v1.courses import router as courses_router
 from src.api.v1.dashboard import router as dashboard_router
@@ -110,7 +111,8 @@ async def root():
 
 # Include routers
 app.include_router(health_router)
-app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
+app.include_router(api_v1_auth_router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(admin_router, prefix="/api/admin", tags=["admin"])
 app.include_router(courses_router, prefix="/api/v1/courses", tags=["courses"])
 app.include_router(dashboard_router, prefix="/api/v1/dashboard", tags=["dashboard"])

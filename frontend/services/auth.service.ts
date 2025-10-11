@@ -20,7 +20,7 @@ export const login = async (email: string, password: string): Promise<AuthTokens
   form.append('username', email);
   form.append('password', password);
 
-  const response = await api.post('/v1/auth/login', form, {
+  const response = await api.post('/auth/login', form, {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
@@ -40,7 +40,7 @@ export const register = async (
     password,
   };
 
-  const response = await api.post('/v1/auth/register', payload);
+  const response = await api.post('/auth/register', payload);
   const data = response.data;
 
   if (data?.status === 'pending_confirmation') {
@@ -54,7 +54,7 @@ export const register = async (
 };
 
 export const getMe = async (): Promise<User> => {
-  const response = await api.get('/v1/auth/me');
+  const response = await api.get('/auth/me');
   const data = response.data;
 
   if (!data) {
@@ -69,7 +69,7 @@ export const getMe = async (): Promise<User> => {
   };
 };
 export const checkEmail = async (email: string): Promise<boolean> => {
-  const response = await api.post('/v1/auth/check-email', { email: email.toLowerCase() });
+  const response = await api.post('/auth/check-email', { email: email.toLowerCase() });
   return response.data.exists;
 };
 
@@ -81,9 +81,9 @@ export const logout = async (): Promise<void> => {
 };
 
 export const forgotPassword = async (email: string): Promise<void> => {
-  await api.post('/v1/auth/forgot-password', { email });
+  await api.post('/auth/forgot-password', { email });
 };
 
 export const resetPassword = async (token: string, newPassword: string): Promise<void> => {
-  await api.post('/v1/auth/reset-password', { token, newPassword });
+  await api.post('/auth/reset-password', { token, newPassword });
 };
