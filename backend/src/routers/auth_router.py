@@ -1,5 +1,5 @@
-from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, Request
+from datetime import datetime, timezone, timedelta
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from slowapi import Limiter
@@ -25,11 +25,27 @@ from src.core.supabase_client import get_resilient_supabase_client, get_resilien
 from src.core.rate_limiting import auth_limiter, LOGIN_RATE_LIMIT, REGISTER_RATE_LIMIT, REFRESH_RATE_LIMIT
 import uuid
 from uuid import UUID
-import asyncio
 
 logger = get_logger(__name__)
 
 router = APIRouter()
+ACCESS_TOKEN_TTL_SECONDS = 15 * 60
+
+async def _finalize_request(result):
+    import asyncio
+
+    if asyncio.iscoroutine(result):
+        return await result
+
+    execute = getattr(result, "execute", None)
+    if callable(execute):
+        exec_result = execute()
+        if asyncio.iscoroutine(exec_result):
+            return await exec_result
+        return exec_result
+
+    return result
+
 
 @router.options("/login")
 async def options_login(request: Request):
@@ -49,10 +65,10 @@ async def login(
     try:
         # Authenticate with Supabase
         supabase = get_resilient_supabase_client()
-        auth_response = await supabase.auth.sign_in_with_password({
+        auth_response = await _finalize_request(supabase.auth.sign_in_with_password({
             "email": email,
             "password": form_data.password
-        })
+        }))
 
         if not auth_response.user:
             logger.warning(f"Invalid login credentials for user: {email}")
@@ -143,10 +159,10 @@ async def register(
 
     try:
         # Step 1: Create Supabase user first
-        auth_response = await supabase.auth.sign_up({
+        auth_response = await _finalize_request(supabase.auth.sign_up({
             "email": email,
             "password": user_data.password
-        })
+        }))
 
         if not auth_response.user:
             logger.warning(f"Supabase registration failed for user: {email} - no user returned")
