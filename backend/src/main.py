@@ -110,9 +110,9 @@ async def root():
 
 # Include routers
 app.include_router(health_router)
-app.include_router(auth_router, prefix="/api/v1", tags=["auth"])
-app.include_router(admin_router, prefix="/api/v1", tags=["admin"])
-app.include_router(courses_router, prefix="/api/v1", tags=["courses"])
-app.include_router(dashboard_router, prefix="/api/v1", tags=["dashboard"])
-app.include_router(lessons_router, prefix="/api/v1", tags=["lessons"])
-app.include_router(quizzes_router, prefix="/api/v1", tags=["quizzes"])
+app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(admin_router, prefix="/api/admin", tags=["admin"])
+app.include_router(courses_router, prefix="/api/v1/courses", tags=["courses"])
+app.include_router(dashboard_router, prefix="/api/v1/dashboard", tags=["dashboard"])
+app.include_router(lessons_router, prefix="/api/v1/lessons", tags=["lessons"])
+app.include_router(quizzes_router, prefix="/api/v1/quizzes", tags=["quizzes"])
