@@ -5,6 +5,8 @@ from typing import Optional
 class Token(BaseModel):
     access_token: str
     token_type: str
+    refresh_token: Optional[str] = None
+    expires_in: Optional[int] = None
 
 
 class RefreshTokenRequest(BaseModel):
@@ -17,4 +19,3 @@ class RefreshTokenResponse(BaseModel):
     token_type: str = "bearer"
     expires_in: Optional[int] = None
     expires_at: Optional[int] = None
-

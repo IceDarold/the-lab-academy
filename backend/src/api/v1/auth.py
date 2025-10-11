@@ -109,6 +109,8 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Token:
 
     session = getattr(response, "session", None)
     token = getattr(session, "access_token", None)
+    refresh_token = getattr(session, "refresh_token", None)
+    expires_in = getattr(session, "expires_in", None)
     if not session or not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -116,7 +118,12 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Token:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    return Token(access_token=token, token_type="bearer")
+    return Token(
+        access_token=token,
+        token_type="bearer",
+        refresh_token=refresh_token,
+        expires_in=expires_in
+    )
 
 
 @router.get("/me", response_model=User)
