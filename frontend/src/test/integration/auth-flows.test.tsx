@@ -2,13 +2,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
-import { AuthProvider, useAuth } from '@/src/contexts/AuthContext'
-import { login as loginService, register as registerService, getMe, checkEmail } from '@/services/auth.service'
-import { clearStoredTokens, getStoredTokens, storeTokens } from '@/src/lib/tokenStorage'
-import api from '@/src/lib/api'
+import { AuthProvider, useAuth } from '@/src/contexts/AuthContext.tsx'
+import { login as loginService, register as registerService, getMe, checkEmail } from '@/services/auth.service.ts'
+import { clearStoredTokens, getStoredTokens, storeTokens } from '@/src/lib/tokenStorage.ts'
+import api from '@/src/lib/api.ts'
 
 // Mock API
-vi.mock('@/src/lib/api', () => ({
+vi.mock('@/src/lib/api.ts', () => ({
   default: {
     post: vi.fn(),
     get: vi.fn(),
@@ -21,7 +21,7 @@ vi.mock('@/src/lib/api', () => ({
 }))
 
 // Mock token storage
-vi.mock('@/src/lib/tokenStorage', () => ({
+vi.mock('@/src/lib/tokenStorage.ts', () => ({
   clearStoredTokens: vi.fn(),
   getStoredTokens: vi.fn(),
   storeTokens: vi.fn(),

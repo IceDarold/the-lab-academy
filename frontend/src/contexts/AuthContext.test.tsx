@@ -2,12 +2,12 @@ import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vite
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AuthProvider, useAuth } from './AuthContext'
-import { login as loginService, register as registerService, logout as logoutService, getMe, checkEmail as checkEmailService } from '@/services/auth.service'
-import { clearStoredTokens, getStoredTokens, storeTokens } from '@/src/lib/tokenStorage'
-import api from '@/src/lib/api'
+import { login as loginService, register as registerService, logout as logoutService, getMe, checkEmail as checkEmailService } from '@/services/auth.service.ts'
+import { clearStoredTokens, getStoredTokens, storeTokens } from '@/src/lib/tokenStorage.ts'
+import api from '@/src/lib/api.ts'
 
 // Mock all dependencies
-vi.mock('@/services/auth.service', () => ({
+vi.mock('@/services/auth.service.ts', () => ({
   login: vi.fn(),
   register: vi.fn(),
   logout: vi.fn(),
@@ -15,13 +15,13 @@ vi.mock('@/services/auth.service', () => ({
   checkEmail: vi.fn(),
 }))
 
-vi.mock('@/src/lib/tokenStorage', () => ({
+vi.mock('@/src/lib/tokenStorage.ts', () => ({
   clearStoredTokens: vi.fn(),
   getStoredTokens: vi.fn(),
   storeTokens: vi.fn(),
 }))
 
-vi.mock('@/src/lib/api', () => ({
+vi.mock('@/src/lib/api.ts', () => ({
   default: {
     defaults: {
       headers: {
@@ -31,7 +31,7 @@ vi.mock('@/src/lib/api', () => ({
   },
 }))
 
-vi.mock('@/components/FullScreenLoader', () => ({
+vi.mock('@/components/FullScreenLoader.tsx', () => ({
   default: () => <div data-testid="fullscreen-loader" aria-label="Loading application"><div>Loading spinner</div></div>,
 }))
 

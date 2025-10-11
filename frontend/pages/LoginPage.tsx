@@ -5,8 +5,8 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import Card from '../components/Card';
 import SocialLoginButton from '../components/SocialLoginButton';
-import { useAuth } from '@/src/contexts/AuthContext';
-import { LoginSchema, LoginData } from '@/src/lib/validators/auth';
+import { useAuth } from '@/src/contexts/AuthContext.tsx';
+import { LoginSchema, LoginData } from '@/src/lib/validators/auth.ts';
 
 const LoginPage = () => {
   const [rememberMe, setRememberMe] = useState(false);

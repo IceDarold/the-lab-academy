@@ -5,7 +5,7 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import Card from '../components/Card';
 import { forgotPassword } from '../services/auth.service';
-import { ForgotPasswordSchema, ForgotPasswordData } from '@/src/lib/validators/auth';
+import { ForgotPasswordSchema, ForgotPasswordData } from '@/src/lib/validators/auth.ts';
 
 const ForgotPasswordPage = () => {
   const [apiError, setApiError] = useState<string | null>(null);
