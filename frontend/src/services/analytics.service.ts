@@ -1,4 +1,4 @@
-import api from '../../lib/api';
+import api from '../lib/api';
 import type { ComparisonActivityData } from '../../components/admin-components/admin/users/mock-chart-data';
 
 export type ActivityType = string;

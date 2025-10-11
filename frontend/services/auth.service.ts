@@ -1,4 +1,4 @@
-import api from '../lib/api';
+import api from '../src/lib/api';
 import { AuthTokens, RegisterResult, User } from '../types/auth';
 
 const mapAuthTokens = (data: any): AuthTokens => {

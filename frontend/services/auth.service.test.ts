@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { login, register, getMe, checkEmail, logout, forgotPassword, resetPassword } from './auth.service'
-import api from '../lib/api'
+import api from '../src/lib/api'
 
 // Mock the API module
-vi.mock('../lib/api', () => ({
+vi.mock('../src/lib/api', () => ({
   default: {
     post: vi.fn(),
     get: vi.fn(),

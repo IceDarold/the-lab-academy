@@ -1,22 +1,22 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { isAxiosError } from 'axios';
-import { User, AuthContextType, AuthTokens } from '../types/auth';
-import FullScreenLoader from '../components/FullScreenLoader';
+import { User, AuthContextType, AuthTokens } from '../../types/auth';
+import FullScreenLoader from '../../components/FullScreenLoader';
 import {
   login as loginService,
   register as registerService,
   logout as logoutService,
   checkEmail as checkEmailService,
   getMe,
-} from '../services/auth.service';
-import api from './lib/api';
-import { clearStoredTokens, getStoredTokens, storeTokens, StoredTokens } from './lib/tokenStorage';
+} from '../../services/auth.service';
+import api from '../lib/api';
+import { clearStoredTokens, getStoredTokens, storeTokens, StoredTokens } from '../lib/tokenStorage';
 import {
   AUTH_EVENTS,
   dispatchAuthEvent,
   LogoutEventDetail,
   TokenRefreshedDetail,
-} from './lib/authEvents';
+} from '../lib/authEvents';
 
 const extractErrorMessage = (error: unknown): string => {
   if (isAxiosError(error)) {

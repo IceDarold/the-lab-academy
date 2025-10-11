@@ -1,4 +1,4 @@
-import api from '../lib/api';
+import api from '../src/lib/api';
 import type { ContentNode } from '../types';
 
 export const getContentTree = async (): Promise<ContentNode[]> => {

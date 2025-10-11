@@ -7,10 +7,10 @@ import {
   getPublicCourseDetails,
   enrollInCourse,
 } from './courses.service'
-import api from '../lib/api'
+import api from '../src/lib/api'
 
 // Mock the API module
-vi.mock('../lib/api', () => ({
+vi.mock('../src/lib/api', () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),
