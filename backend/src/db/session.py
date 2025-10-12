@@ -45,7 +45,9 @@ def get_database_engine() -> AsyncEngine:
         else:
             connect_args = {}
             if database_url.startswith("postgresql+asyncpg"):
+                # Supabase pooler defaults to transaction mode; disable statement cache
                 connect_args["statement_cache_size"] = 0
+                connect_args.setdefault("prepared_statement_cache_size", 0)
 
             _engine = create_async_engine(
                 database_url,
