@@ -243,6 +243,10 @@ class ResilientSupabaseClient:
         def update_user(self, data: dict) -> Any:
             return self._client._get_client().auth.update_user(data)
 
+        @retry_on_network_errors
+        def delete_user(self, user_id: str) -> Any:
+            return self._client._get_client().auth.admin.delete_user(user_id)
+
     class _TableOperations:
         def __init__(self, client: 'ResilientSupabaseClient'):
             self._client = client
@@ -281,10 +285,7 @@ class ResilientSupabaseClient:
 
         @retry_on_network_errors
         def delete_user(self, user_id: str) -> Any:
-            return self._client._get_client().admin.delete_user(user_id)
-
-
-# Global client instances
+            return self._client._get_client().auth.admin.delete_user(user_id)
 _supabase_client: Optional[ResilientSupabaseClient] = None
 _supabase_admin_client: Optional[ResilientSupabaseClient] = None
 
