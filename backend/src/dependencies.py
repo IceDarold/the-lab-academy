@@ -1,10 +1,17 @@
-from src.db.session import get_db_session, get_db
+from typing import AsyncGenerator
+
+from src.db.session import get_db_session
 from fastapi import Depends, HTTPException, status
 from src.services.file_system_service import FileSystemService
 from src.services.content_scanner_service import ContentScannerService
 from src.services.ulf_parser_service import ULFParserService
 from src.core.security import get_current_user, get_current_admin
 from src.schemas.user import User
+
+
+async def get_db() -> AsyncGenerator:
+    async for session in get_db_session():
+        yield session
 
 
 def get_fs_service() -> FileSystemService:
