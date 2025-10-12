@@ -4,16 +4,21 @@ title: Variables and Data Types
 lesson_id: 223e4567-e89b-12d3-a456-426614174001
 course_slug: python-basics
 ---
-
+type: text
+---
 # Variables and Data Types in Python
 
 Variables are containers for storing data values. Python has several built-in data types that we'll explore in this lesson.
-
+---
+type: text
+---
 ## Variables
 
 A variable is created the moment you first assign a value to it:
-
-```python
+---
+type: code
+language: python
+---
 # Variable assignment
 name = "Alice"
 age = 25
@@ -21,20 +26,25 @@ height = 5.7
 is_student = True
 
 print(name)  # Output: Alice
-```
-
+---
+type: text
+---
 ### Variable Naming Rules
 
 - Must start with a letter or underscore
 - Can contain letters, numbers, and underscores
 - Case-sensitive (name ≠ Name)
 - Cannot use Python keywords
-
+---
+type: text
+---
 ## Data Types
 
 ### Numbers
-
-```python
+---
+type: code
+language: python
+---
 # Integers
 x = 5
 y = -10
@@ -45,11 +55,14 @@ temperature = -5.5
 
 # Complex numbers
 z = 3 + 4j
-```
-
+---
+type: text
+---
 ### Strings
-
-```python
+---
+type: code
+language: python
+---
 # String literals
 name = "Python"
 message = 'Hello World!'
@@ -64,22 +77,28 @@ And so are you!"""
 first_name = "John"
 last_name = "Doe"
 full_name = first_name + " " + last_name  # "John Doe"
-```
-
+---
+type: text
+---
 ### Booleans
-
-```python
+---
+type: code
+language: python
+---
 is_raining = True
 is_sunny = False
 
 # Boolean operations
 result = 5 > 3  # True
 is_adult = age >= 18  # Depends on age value
-```
-
+---
+type: text
+---
 ### Lists
-
-```python
+---
+type: code
+language: python
+---
 # Creating lists
 fruits = ["apple", "banana", "cherry"]
 numbers = [1, 2, 3, 4, 5]
@@ -92,11 +111,14 @@ last_number = numbers[-1]  # 5
 # Modifying lists
 fruits.append("orange")
 fruits[1] = "blueberry"
-```
-
+---
+type: text
+---
 ### Dictionaries
-
-```python
+---
+type: code
+language: python
+---
 # Creating dictionaries
 person = {
     "name": "Alice",
@@ -111,11 +133,14 @@ age = person.get("age")  # 25
 # Adding/modifying values
 person["email"] = "alice@example.com"
 person["age"] = 26
-```
-
+---
+type: text
+---
 ## Type Conversion
-
-```python
+---
+type: code
+language: python
+---
 # Convert to string
 str(123)  # "123"
 str(3.14)  # "3.14"
@@ -127,8 +152,9 @@ int(3.9)  # 3 (truncates)
 # Convert to float
 float("3.14")  # 3.14
 float(42)  # 42.0
-```
-
+---
+type: text
+---
 ## Practice Exercise
 
 Create variables for:
