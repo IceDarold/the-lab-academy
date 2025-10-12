@@ -232,7 +232,7 @@ async def register(
             if supabase_user_id:
                 try:
                     admin_supabase = get_resilient_supabase_admin_client()
-                    await admin_supabase.admin.delete_user(supabase_user_id)
+                    await _finalize_request(admin_supabase.auth.admin.delete_user(supabase_user_id))
                     logger.info(f"Rolled back Supabase user for: {email}")
                 except Exception as delete_e:
                     logger.error(f"Failed to rollback Supabase user {email}: {str(delete_e)}")
