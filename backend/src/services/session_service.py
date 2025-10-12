@@ -41,7 +41,8 @@ class SessionService:
             if expires_delta is None:
                 expires_delta = timedelta(days=7)
 
-            expires_at = datetime.now(timezone.utc) + expires_delta
+            expires_at_aware = datetime.now(timezone.utc) + expires_delta
+            expires_at = expires_at_aware.replace(tzinfo=None)
             token_hash = SessionService.hash_refresh_token(refresh_token)
 
             session = UserSession(
