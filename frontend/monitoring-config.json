@@ -1,0 +1,161 @@
+{
+  "version": "1.0.0",
+  "monitoring": {
+    "enabled": true,
+    "metricsCollection": {
+      "testExecution": {
+        "duration": true,
+        "passFailRates": true,
+        "errorPatterns": true,
+        "resourceUsage": true
+      },
+      "validation": {
+        "configChecks": true,
+        "dependencyValidation": true,
+        "environmentChecks": true,
+        "performanceBaselines": true
+      },
+      "trends": {
+        "enabled": true,
+        "periods": ["24h", "7d", "30d"],
+        "anomalyDetection": true
+      }
+    },
+    "alerting": {
+      "enabled": true,
+      "channels": {
+        "console": true,
+        "slack": false,
+        "email": false,
+        "webhook": false
+      },
+      "thresholds": {
+        "testFailureRate": {
+          "warning": 0.05,
+          "critical": 0.15,
+          "description": "Percentage of failed tests"
+        },
+        "testDurationIncrease": {
+          "warning": 0.20,
+          "critical": 0.50,
+          "description": "Percentage increase in test duration"
+        },
+        "validationFailures": {
+          "warning": 1,
+          "critical": 3,
+          "description": "Number of validation check failures"
+        },
+        "configErrors": {
+          "warning": 1,
+          "critical": 2,
+          "description": "Number of configuration validation errors"
+        },
+        "dependencyIssues": {
+          "warning": 1,
+          "critical": 3,
+          "description": "Number of dependency-related issues"
+        }
+      },
+      "cooldown": {
+        "minutes": 5,
+        "description": "Minimum time between similar alerts"
+      }
+    },
+    "reporting": {
+      "dashboard": {
+        "enabled": true,
+        "metrics": [
+          "testExecution.duration",
+          "testExecution.passRate",
+          "validation.duration",
+          "validation.passRate",
+          "performance.trends",
+          "errorPatterns.frequency"
+        ]
+      },
+      "ciIntegration": {
+        "enabled": true,
+        "artifacts": {
+          "metrics": "test-results/test-run-metrics.json",
+          "validation": "test-results/validation-metrics.json",
+          "trends": "test-results/test-trends.json",
+          "aggregated": "test-results/test-results-*.json"
+        },
+        "summaryReport": {
+          "enabled": true,
+          "format": "markdown",
+          "includeCharts": true
+        }
+      }
+    }
+  },
+  "infrastructure": {
+    "testTypes": {
+      "unit": {
+        "timeout": 300000,
+        "retries": 2,
+        "parallel": true
+      },
+      "integration": {
+        "timeout": 600000,
+        "retries": 1,
+        "parallel": false
+      },
+      "e2e": {
+        "timeout": 900000,
+        "retries": 1,
+        "parallel": false
+      },
+      "visual": {
+        "timeout": 600000,
+        "retries": 2,
+        "parallel": true
+      },
+      "accessibility": {
+        "timeout": 300000,
+        "retries": 1,
+        "parallel": true
+      },
+      "performance": {
+        "timeout": 600000,
+        "retries": 1,
+        "parallel": false
+      }
+    },
+    "resourceLimits": {
+      "maxMemory": "2GB",
+      "maxCpu": "80%",
+      "maxConcurrentTests": 4
+    }
+  },
+  "notifications": {
+    "slack": {
+      "webhookUrl": "${SLACK_WEBHOOK_URL}",
+      "channel": "#test-alerts",
+      "username": "Test Monitor",
+      "icon": ":test_tube:"
+    },
+    "email": {
+      "smtp": {
+        "host": "${SMTP_HOST}",
+        "port": 587,
+        "secure": false,
+        "auth": {
+          "user": "${SMTP_USER}",
+          "pass": "${SMTP_PASS}"
+        }
+      },
+      "from": "test-monitor@company.com",
+      "to": ["dev-team@company.com"],
+      "subject": "Test Infrastructure Alert"
+    },
+    "webhook": {
+      "url": "${WEBHOOK_URL}",
+      "headers": {
+        "Authorization": "Bearer ${WEBHOOK_TOKEN}",
+        "Content-Type": "application/json"
+      },
+      "method": "POST"
+    }
+  }
+}

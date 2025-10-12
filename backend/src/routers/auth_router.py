@@ -17,6 +17,7 @@ from src.schemas import (
     ForgotPasswordRequest,
     ResetPasswordRequest,
 )
+from src.schemas.user import _normalize_email
 from src.dependencies import get_db, get_current_user
 from src.core.security import create_access_token, create_refresh_token, verify_refresh_token
 from src.core.logging import get_logger
@@ -59,7 +60,25 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db)
 ):
-    email = form_data.username
+    # Validate email format
+    try:
+        email = _normalize_email(form_data.username.strip())
+    except ValueError as exc:
+        logger.warning(f"Login attempt with invalid email format: {form_data.username} -> {str(exc)}")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Invalid email format",
+        ) from exc
+
+    # Validate password is not empty
+    password = form_data.password or ""
+    if not password.strip():
+        logger.warning("Login attempt with empty password")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Password is required",
+        )
+
     logger.info(f"Login attempt for user: {email}")
 
     try:
@@ -67,7 +86,7 @@ async def login(
         supabase = get_resilient_supabase_client()
         auth_response = await _finalize_request(supabase.auth.sign_in_with_password({
             "email": email,
-            "password": form_data.password
+            "password": password
         }))
 
         if not auth_response.user:
@@ -88,6 +107,9 @@ async def login(
         raise HTTPException(status_code=401, detail="Invalid email or password")
     except Exception as e:
         logger.error(f"Unexpected error during login for user {email}: {str(e)}")
+        # Check if it's an authentication-related exception from Supabase
+        if "invalid" in str(e).lower() or "unauthorized" in str(e).lower():
+            raise HTTPException(status_code=401, detail="Invalid email or password")
         raise HTTPException(status_code=500, detail="An unexpected error occurred during login")
 
     try:

@@ -1,0 +1,15 @@
+# HELP test_execution_duration_seconds Total test execution duration in seconds
+# TYPE test_execution_duration_seconds gauge
+test_execution_duration_seconds{test_type="unknown"} 0.525
+# HELP test_execution_exit_code Exit code of test execution
+# TYPE test_execution_exit_code gauge
+test_execution_exit_code{test_type="unknown"} 0
+# HELP validation_duration_seconds Validation duration in seconds
+# TYPE validation_duration_seconds gauge
+validation_duration_seconds 0.525
+# HELP validation_passed Validation success status
+# TYPE validation_passed gauge
+validation_passed 1
+# HELP validation_errors_total Total validation errors
+# TYPE validation_errors_total gauge
+validation_errors_total 0

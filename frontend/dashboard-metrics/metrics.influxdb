@@ -1,0 +1,2 @@
+test_execution,test_type=unknown,run_id=unknown duration_seconds=0.525,exit_code=0,test_duration_seconds=0 1760274255703000000
+validation, duration_seconds=0.525,passed=1,errors_total=0,warnings_total=0 1760274255703000000

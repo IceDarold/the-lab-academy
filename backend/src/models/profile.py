@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Enum, ForeignKey
+from sqlalchemy import Column, String, DateTime, Enum, ForeignKey, text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
@@ -10,8 +10,8 @@ class Profile(Base):
     __tablename__ = "profiles"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    created_at = Column(DateTime, server_default=text("(datetime('now'))"))
+    updated_at = Column(DateTime, server_default=text("(datetime('now'))"), onupdate=text("(datetime('now'))"))
     email = Column(String(254), unique=True, index=True, nullable=False)
     full_name = Column(String, nullable=True)
     avatar_url = Column(String, nullable=True)

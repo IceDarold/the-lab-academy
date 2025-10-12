@@ -53,6 +53,22 @@ class Settings(BaseSettings):
     SUPABASE_KEY: str = ""
     SUPABASE_SERVICE_ROLE_KEY: str = ""
 
+    @property
+    def effective_supabase_url(self) -> str:
+        """Get the effective Supabase URL, with test environment fallbacks if needed."""
+        if self.TESTING and not self.SUPABASE_URL:
+            # For testing, require SUPABASE_URL to be set in environment
+            raise ValueError("SUPABASE_URL must be set for test environment")
+        return self.SUPABASE_URL
+
+    @property
+    def effective_supabase_service_role_key(self) -> str:
+        """Get the effective Supabase service role key, with test environment fallbacks if needed."""
+        if self.TESTING and not self.SUPABASE_SERVICE_ROLE_KEY:
+            # For testing, require SUPABASE_SERVICE_ROLE_KEY to be set in environment
+            raise ValueError("SUPABASE_SERVICE_ROLE_KEY must be set for test environment")
+        return self.SUPABASE_SERVICE_ROLE_KEY
+
     # Default settings
     ALGORITHM: str = "HS256"
     CONTENT_ROOT: str = "content"

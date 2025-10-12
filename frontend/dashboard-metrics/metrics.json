@@ -1,0 +1,85 @@
+{
+  "timestamp": "2025-10-12T13:04:15.702Z",
+  "testRun": {
+    "startTime": 1760274238361,
+    "endTime": 1760274238886,
+    "duration": 525,
+    "checks": {
+      "configSyntax": {
+        "passed": false,
+        "duration": null,
+        "errors": [],
+        "warnings": []
+      },
+      "dependencies": {
+        "passed": false,
+        "duration": null,
+        "errors": [],
+        "warnings": []
+      },
+      "environmentVariables": {
+        "passed": false,
+        "duration": null,
+        "errors": [],
+        "warnings": []
+      },
+      "fileSystemPermissions": {
+        "passed": false,
+        "duration": null,
+        "errors": [],
+        "warnings": []
+      },
+      "portAvailability": {
+        "passed": false,
+        "duration": null,
+        "errors": [],
+        "warnings": []
+      }
+    },
+    "totalErrors": 0,
+    "totalWarnings": 0,
+    "passed": true
+  },
+  "validation": {
+    "startTime": 1760274238361,
+    "endTime": 1760274238886,
+    "duration": 525,
+    "checks": {
+      "configSyntax": {
+        "passed": false,
+        "duration": null,
+        "errors": [],
+        "warnings": []
+      },
+      "dependencies": {
+        "passed": false,
+        "duration": null,
+        "errors": [],
+        "warnings": []
+      },
+      "environmentVariables": {
+        "passed": false,
+        "duration": null,
+        "errors": [],
+        "warnings": []
+      },
+      "fileSystemPermissions": {
+        "passed": false,
+        "duration": null,
+        "errors": [],
+        "warnings": []
+      },
+      "portAvailability": {
+        "passed": false,
+        "duration": null,
+        "errors": [],
+        "warnings": []
+      }
+    },
+    "totalErrors": 0,
+    "totalWarnings": 0,
+    "passed": true
+  },
+  "trends": null,
+  "alerts": null
+}

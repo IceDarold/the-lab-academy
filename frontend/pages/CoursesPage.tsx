@@ -137,7 +137,7 @@ const CoursesPage = () => {
               Find the perfect course to start your journey in Machine Learning, from beginner basics to advanced topics.
             </p>
           </div>
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div data-testid="courses-list" className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {renderedCourses}
           </div>
         </section>

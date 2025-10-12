@@ -1,14 +1,20 @@
 import { spawn } from 'child_process';
 import { join } from 'path';
 import http from 'http';
+import { findAvailablePort } from './port-utils';
 
 export default async function integrationSetup() {
   const backendDir = join(process.cwd(), '..', 'backend');
+
+  // Find available port for integration tests
+  const testPort = await findAvailablePort();
+  console.log(`Using port ${testPort} for integration tests`);
 
   // Set testing environment
   const env = {
     ...process.env,
     TESTING: 'true',
+    INTEGRATION_TEST_PORT: testPort.toString(),
   };
 
   // Run database migrations
@@ -63,7 +69,7 @@ export default async function integrationSetup() {
 
   // Start the backend server
   console.log('Starting backend server for integration tests...');
-  const serverProcess = spawn('poetry', ['run', 'uvicorn', 'src.main:app', '--host', '127.0.0.1', '--port', '8001'], {
+  const serverProcess = spawn('poetry', ['run', 'uvicorn', 'src.main:app', '--host', '127.0.0.1', '--port', testPort.toString()], {
     cwd: backendDir,
     env,
     stdio: 'inherit',
@@ -76,7 +82,7 @@ export default async function integrationSetup() {
   console.log('Waiting for backend server to be ready...');
   await new Promise<void>((resolve, reject) => {
     const checkServer = () => {
-      const req = http.get('http://localhost:8001/health', (res) => {
+      const req = http.get(`http://localhost:${testPort}/health`, (res) => {
         if (res.statusCode === 200) {
           console.log('Backend server is ready for integration tests');
           resolve();

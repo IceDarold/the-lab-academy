@@ -64,8 +64,8 @@ def run_migrations_online() -> None:
     from dotenv import load_dotenv
     load_dotenv()
     # Set testing environment if not already set
-    if not os.getenv('TESTING'):
-        os.environ['TESTING'] = 'true'
+    # if not os.getenv('TESTING'):
+    #     os.environ['TESTING'] = 'true'
     # Import settings to handle test database URL
     from src.core.config import settings
 

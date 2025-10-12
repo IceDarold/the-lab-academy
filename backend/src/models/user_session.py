@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
@@ -16,8 +16,8 @@ class UserSession(Base):
     ip_address = Column(String, nullable=True)
     expires_at = Column(DateTime, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
-    created_at = Column(DateTime, server_default=func.now())
-    last_used_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    created_at = Column(DateTime, server_default=text("(datetime('now'))"))
+    last_used_at = Column(DateTime, server_default=text("(datetime('now'))"), onupdate=text("(datetime('now'))"))
 
     # Relationship
     user = relationship("Profile", back_populates="sessions")

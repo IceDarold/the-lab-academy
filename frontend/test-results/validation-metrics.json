@@ -1,0 +1,40 @@
+{
+  "startTime": 1760282042493,
+  "endTime": 1760282043589,
+  "duration": 1096,
+  "checks": {
+    "configSyntax": {
+      "passed": false,
+      "duration": null,
+      "errors": [],
+      "warnings": []
+    },
+    "dependencies": {
+      "passed": false,
+      "duration": null,
+      "errors": [],
+      "warnings": []
+    },
+    "environmentVariables": {
+      "passed": false,
+      "duration": null,
+      "errors": [],
+      "warnings": []
+    },
+    "fileSystemPermissions": {
+      "passed": false,
+      "duration": null,
+      "errors": [],
+      "warnings": []
+    },
+    "portAvailability": {
+      "passed": false,
+      "duration": null,
+      "errors": [],
+      "warnings": []
+    }
+  },
+  "totalErrors": 0,
+  "totalWarnings": 0,
+  "passed": true
+}

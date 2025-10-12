@@ -61,6 +61,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
 
   return (
     <motion.div
+      data-testid="course-card"
       className="cursor-pointer rounded-lg h-full shadow-lg"
       onClick={onCourseClick}
       whileHover={{ scale: 1.03, rotate: 1 }}
@@ -92,11 +93,11 @@ const CourseCard: React.FC<CourseCardProps> = ({
             </div>
           )}
 
-          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{courseName}</h3>
+          <h3 data-testid="course-title" className="text-xl font-bold text-gray-900 dark:text-gray-100">{courseName}</h3>
 
           <div className="flex-grow mt-4 space-y-4">
             {status === 'public' && (
-              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
+              <p data-testid="course-description" className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
                 {description}
               </p>
             )}

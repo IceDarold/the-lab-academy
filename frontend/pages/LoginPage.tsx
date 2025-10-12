@@ -60,6 +60,7 @@ const LoginPage = () => {
                 <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
                     <Input
                         id="email-address"
+                        data-testid="email-input"
                         label="Email address"
                         type="email"
                         autoComplete="email"
@@ -71,6 +72,7 @@ const LoginPage = () => {
                     />
                     <Input
                         id="password"
+                        data-testid="password-input"
                         label="Password"
                         type={showPassword ? "text" : "password"}
                         autoComplete="current-password"
@@ -120,7 +122,7 @@ const LoginPage = () => {
                     </div>
 
                     {apiError && (
-                        <div className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-600 rounded-md">
+                        <div data-testid="error-message" className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-600 rounded-md">
                             <p className="text-sm text-red-700 dark:text-red-300 text-center font-medium">
                                 {apiError}
                             </p>
@@ -128,7 +130,7 @@ const LoginPage = () => {
                     )}
 
                     <div>
-                        <Button type="submit" variant="primary" className="w-full" loading={isSubmitting || isSubmittingLocal}>
+                        <Button type="submit" data-testid="login-button" variant="primary" className="w-full" loading={isSubmitting || isSubmittingLocal}>
                             Sign in
                         </Button>
                     </div>

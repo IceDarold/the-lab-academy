@@ -98,6 +98,7 @@ const RegistrationPage = () => {
                         <div className="mt-1">
                             <Input
                                 id="full-name"
+                                data-testid="full-name-input"
                                 type="text"
                                 autoComplete="name"
                                 placeholder="Ada Lovelace"
@@ -115,6 +116,7 @@ const RegistrationPage = () => {
                         <div className="mt-1">
                             <Input
                                 id="email-address"
+                                data-testid="email-input"
                                 type="email"
                                 autoComplete="email"
                                 placeholder="you@example.com"
@@ -137,6 +139,7 @@ const RegistrationPage = () => {
                         <div className="mt-1">
                             <Input
                                 id="password"
+                                data-testid="password-input"
                                 type={showPassword ? "text" : "password"}
                                 autoComplete="new-password"
                                 placeholder="••••••••"
@@ -167,6 +170,7 @@ const RegistrationPage = () => {
                         <div className="flex items-center h-5">
                             <input
                                 id="terms"
+                                data-testid="terms-checkbox"
                                 type="checkbox"
                                 {...register('terms')}
                                 checked={watch('terms') || false}
@@ -194,7 +198,7 @@ const RegistrationPage = () => {
                     </div>
 
                     {apiError && (
-                        <div className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-600 rounded-md">
+                        <div data-testid="error-message" className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-600 rounded-md">
                             <p className="text-sm text-red-700 dark:text-red-300 text-center font-medium">
                                 {apiError}
                             </p>
@@ -202,7 +206,7 @@ const RegistrationPage = () => {
                     )}
 
                     <div>
-                        <Button type="submit" variant="primary" className="w-full" loading={isSubmitting}>
+                        <Button type="submit" data-testid="register-button" variant="primary" className="w-full" loading={isSubmitting}>
                             Create account
                         </Button>
                     </div>

@@ -6,9 +6,69 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+env:
+  NODE_VERSION: '20.x'
+  PYTHON_VERSION: '3.12'
+
 jobs:
-  frontend-test:
+  # Frontend unit tests
+  frontend-unit-tests:
     runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Run frontend linting
+      run: |
+        cd frontend
+        npm run lint
+
+    - name: Run frontend unit tests
+      run: |
+        cd frontend
+        npm run test:run
+
+    - name: Run frontend unit tests with coverage
+      run: |
+        cd frontend
+        npm run test:coverage
+
+    - name: Upload frontend coverage reports
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./frontend/coverage/coverage-final.json
+        flags: frontend-unittests
+        name: codecov-frontend-unittests
+        fail_ci_if_error: false
+
+  # Frontend integration tests
+  frontend-integration-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
     - name: Checkout code
@@ -17,44 +77,14 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 20.x
+        node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
         cache-dependency-path: frontend/package-lock.json
-
-    - name: Install frontend dependencies
-      run: npm ci
-
-    - name: Run frontend linting
-      run: npm run lint 2>/dev/null || echo "No lint script found, skipping linting"
-
-    - name: Run frontend tests
-      run: npm run test:run
-
-    - name: Run frontend tests with coverage
-      run: npm run test:coverage
-
-    - name: Build frontend project
-      run: npm run build
-
-    - name: Upload frontend coverage reports
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./frontend/coverage/coverage-final.json
-        flags: frontend-unittests
-        name: codecov-frontend
-        fail_ci_if_error: false
-
-  backend-test:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
 
     - name: Setup Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.12'
+        python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Install Poetry
       run: |
@@ -66,10 +96,82 @@ jobs:
         cd backend
         poetry install
 
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Setup test database
+      run: |
+        cd backend
+        poetry run python scripts/seed_database.py --test
+
+    - name: Run backend in background
+      run: |
+        cd backend
+        poetry run uvicorn src.main:app --host 0.0.0.0 --port 8001 &
+        sleep 10
+
+    - name: Run frontend integration tests
+      run: |
+        cd frontend
+        npm run test:integration:ci
+
+    - name: Upload integration test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: integration-test-results-${{ github.run_id }}
+        path: |
+          frontend/test-results/
+          frontend/coverage/
+        retention-days: 30
+
+  # Backend tests
+  backend-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        poetry install
+
+    - name: Setup test database
+      run: |
+        cd backend
+        poetry run python scripts/seed_database.py --test
+
     - name: Run backend tests
       run: |
         cd backend
-        poetry run pytest --cov=src --cov-report=xml
+        poetry run pytest --cov=src --cov-report=xml --cov-report=html
 
     - name: Upload backend coverage reports
       uses: codecov/codecov-action@v4
@@ -78,3 +180,698 @@ jobs:
         flags: backend-unittests
         name: codecov-backend
         fail_ci_if_error: false
+
+    - name: Upload backend test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: backend-test-results-${{ github.run_id }}
+        path: |
+          backend/coverage/
+          backend/htmlcov/
+        retention-days: 30
+
+  # E2E API tests
+  e2e-api-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        poetry install
+
+    - name: Setup test database
+      run: |
+        cd backend
+        poetry run python scripts/seed_database.py --test
+
+    - name: Start backend server
+      run: |
+        cd backend
+        poetry run uvicorn src.main:app --host 0.0.0.0 --port 8001 &
+        sleep 10
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Install Playwright browsers
+      run: |
+        cd frontend
+        npx playwright install --with-deps
+
+    - name: Run E2E API tests
+      run: |
+        cd frontend
+        npm run e2e:api:ci
+
+    - name: Upload E2E API test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: e2e-api-test-results-${{ github.run_id }}
+        path: frontend/playwright-report/
+        retention-days: 30
+
+  # E2E UI tests
+  e2e-ui-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        poetry install
+
+    - name: Setup test database
+      run: |
+        cd backend
+        poetry run python scripts/seed_database.py --test
+
+    - name: Start backend server
+      run: |
+        cd backend
+        poetry run uvicorn src.main:app --host 0.0.0.0 --port 8001 &
+        sleep 10
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Start frontend server
+      run: |
+        cd frontend
+        npm run preview --port 3000 &
+        sleep 10
+
+    - name: Install Playwright browsers
+      run: |
+        cd frontend
+        npx playwright install --with-deps
+
+    - name: Run E2E UI tests
+      run: |
+        cd frontend
+        npm run e2e:ui-only:ci
+
+    - name: Upload E2E UI test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: e2e-ui-test-results-${{ github.run_id }}
+        path: frontend/playwright-report/
+        retention-days: 30
+
+  # Visual regression tests
+  visual-regression-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        poetry install
+
+    - name: Setup test database
+      run: |
+        cd backend
+        poetry run python scripts/seed_database.py --test
+
+    - name: Start backend server
+      run: |
+        cd backend
+        poetry run uvicorn src.main:app --host 0.0.0.0 --port 8001 &
+        sleep 10
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Start frontend server
+      run: |
+        cd frontend
+        npm run preview --port 3000 &
+        sleep 10
+
+    - name: Install Playwright browsers
+      run: |
+        cd frontend
+        npx playwright install --with-deps
+
+    - name: Run visual regression tests
+      run: |
+        cd frontend
+        npm run e2e:visual:ci
+
+    - name: Upload visual regression results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: visual-regression-results-${{ github.run_id }}
+        path: |
+          frontend/playwright-report/
+          frontend/test-results/
+        retention-days: 30
+
+  # Performance tests
+  performance-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        poetry install
+
+    - name: Setup test database
+      run: |
+        cd backend
+        poetry run python scripts/seed_database.py --test
+
+    - name: Start backend server
+      run: |
+        cd backend
+        poetry run uvicorn src.main:app --host 0.0.0.0 --port 8001 &
+        sleep 10
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Start frontend server
+      run: |
+        cd frontend
+        npm run preview --port 3000 &
+        sleep 10
+
+    - name: Install Playwright browsers
+      run: |
+        cd frontend
+        npx playwright install --with-deps
+
+    - name: Run performance tests
+      run: |
+        cd frontend
+        npm run test:performance:ci
+
+    - name: Upload performance test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: performance-test-results-${{ github.run_id }}
+        path: |
+          frontend/performance-reports/
+          frontend/playwright-report/
+        retention-days: 30
+
+  # Accessibility tests
+  accessibility-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        poetry install
+
+    - name: Setup test database
+      run: |
+        cd backend
+        poetry run python scripts/seed_database.py --test
+
+    - name: Start backend server
+      run: |
+        cd backend
+        poetry run uvicorn src.main:app --host 0.0.0.0 --port 8001 &
+        sleep 10
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Start frontend server
+      run: |
+        cd frontend
+        npm run preview --port 3000 &
+        sleep 10
+
+    - name: Install Playwright browsers
+      run: |
+        cd frontend
+        npx playwright install --with-deps
+
+    - name: Run accessibility tests
+      run: |
+        cd frontend
+        npm run e2e:accessibility:ci
+
+    - name: Generate accessibility reports
+      run: |
+        cd frontend
+        npm run accessibility:audit:report
+
+    - name: Upload accessibility test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: accessibility-results-${{ github.run_id }}
+        path: |
+          frontend/playwright-report/
+          frontend/accessibility-results.json
+          frontend/accessibility-report/
+        retention-days: 30
+
+    - name: Check accessibility violations threshold
+      run: |
+        cd frontend
+        npm run accessibility:audit
+
+  # Error scenario and chaos engineering tests
+  error-scenario-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        poetry install
+
+    - name: Setup test database
+      run: |
+        cd backend
+        poetry run python scripts/seed_database.py --test
+
+    - name: Start backend server
+      run: |
+        cd backend
+        poetry run uvicorn src.main:app --host 0.0.0.0 --port 8001 &
+        sleep 10
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Start frontend server
+      run: |
+        cd frontend
+        npm run preview --port 3000 &
+        sleep 10
+
+    - name: Install Playwright browsers
+      run: |
+        cd frontend
+        npx playwright install --with-deps
+
+    - name: Run error scenario and chaos engineering tests
+      run: |
+        cd frontend
+        npm run error-scenario:report:ci
+
+    - name: Upload error scenario test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: error-scenario-results-${{ github.run_id }}
+        path: |
+          frontend/playwright-report/
+          frontend/error-scenario-report/
+          frontend/error-scenario-report.json
+        retention-days: 30
+
+    - name: Check error scenario failure thresholds
+      run: |
+        cd frontend
+        # Check if error scenario report indicates too many failures
+        if [ -f "error-scenario-report.json" ]; then
+          # Add logic to check failure thresholds (e.g., max 5% failure rate)
+          echo "Error scenario tests completed. Check artifacts for detailed report."
+        fi
+
+  # Build and deploy check
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    needs: [frontend-unit-tests, frontend-integration-tests, backend-tests, e2e-api-tests, e2e-ui-tests, visual-regression-tests, performance-tests, accessibility-tests, error-scenario-tests]
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Build frontend project
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        poetry install
+
+    - name: Build backend
+      run: |
+        cd backend
+        poetry build
+
+    - name: Run deployment checks
+      run: |
+        echo "All tests passed! Ready for deployment."
+
+  # Test results aggregation and reporting
+  test-results-summary:
+    runs-on: ubuntu-latest
+    needs: [frontend-unit-tests, frontend-integration-tests, backend-tests, e2e-api-tests, e2e-ui-tests, visual-regression-tests, performance-tests, accessibility-tests, error-scenario-tests]
+    if: always()
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download all test artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: ./test-artifacts
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Generate comprehensive test summary
+      run: |
+        cd frontend
+        node scripts/generate-test-summary.js
+
+    - name: Aggregate test results
+      run: |
+        cd frontend
+        npm run test:aggregate
+
+    - name: Generate test dashboard
+      run: |
+        cd frontend
+        npm run test:dashboard
+
+    - name: Comment PR with test results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+
+          const summaryPath = path.join(process.cwd(), 'frontend', 'test-summary.md');
+          if (fs.existsSync(summaryPath)) {
+            const summary = fs.readFileSync(summaryPath, 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+          }
+
+    - name: Upload final test summary
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-summary-${{ github.run_id }}
+        path: frontend/test-summary.md
+        retention-days: 30
+
+    - name: Upload test dashboard
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-dashboard-${{ github.run_id }}
+        path: frontend/test-dashboard/
+        retention-days: 30
+
+    - name: Upload aggregated test results
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-history-${{ github.run_id }}
+        path: frontend/test-results-history/
+        retention-days: 30
+
+    - name: Notify on test failures
+      if: failure()
+      run: |
+        echo "Some tests failed. Check the artifacts for detailed results."
+        # Add notification logic here (Slack, email, etc.)

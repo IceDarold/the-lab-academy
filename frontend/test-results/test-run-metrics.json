@@ -1,0 +1,23 @@
+{
+  "startTime": 1760282037119,
+  "endTime": null,
+  "duration": null,
+  "exitCode": null,
+  "command": "npx playwright test --workers=1",
+  "validationPassed": false,
+  "validationDuration": 56,
+  "errors": [
+    {
+      "timestamp": "2025-10-12T15:13:57.178Z",
+      "message": "Pre-test validation failed"
+    }
+  ],
+  "warnings": [],
+  "testType": null,
+  "timestamp": "2025-10-12T15:13:57.178Z",
+  "runId": "local-1760282037179",
+  "commit": "unknown",
+  "branch": "unknown",
+  "nodeVersion": "v24.7.0",
+  "platform": "darwin"
+}

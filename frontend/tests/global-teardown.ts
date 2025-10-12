@@ -1,4 +1,5 @@
 import { join } from 'path';
+import { spawn } from 'child_process';
 import fs from 'fs';
 
 export default async function globalTeardown() {
@@ -35,13 +36,48 @@ export default async function globalTeardown() {
     console.log('Frontend stopped');
   }
 
-  // Clean up test database
+  // Clean up test data from databases before removing local file
   const backendDir = join(process.cwd(), '..', 'backend');
+  const cleanupScriptPath = join(backendDir, 'scripts', 'e2e_cleanup.py');
+
+  if (fs.existsSync(cleanupScriptPath)) {
+    console.log('Running database cleanup script...');
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const cleanupProcess = spawn('python3', [cleanupScriptPath], {
+          cwd: backendDir,
+          stdio: 'inherit'
+        });
+
+        cleanupProcess.on('close', (code) => {
+          if (code === 0) {
+            console.log('Database cleanup completed successfully');
+            resolve();
+          } else {
+            console.warn(`Database cleanup exited with code ${code}, continuing with teardown`);
+            resolve(); // Don't fail the teardown if cleanup fails
+          }
+        });
+
+        cleanupProcess.on('error', (error) => {
+          console.warn(`Failed to run database cleanup: ${error.message}, continuing with teardown`);
+          resolve(); // Don't fail the teardown if cleanup fails
+        });
+      });
+    } catch (error) {
+      console.warn(`Database cleanup failed: ${error}, continuing with teardown`);
+    }
+  } else {
+    console.log('Database cleanup script not found, skipping cleanup');
+  }
+
+  // Clean up test database file
   const testDbPath = join(backendDir, 'test.db');
 
   if (fs.existsSync(testDbPath)) {
-    console.log('Cleaning up test database...');
+    console.log('Cleaning up test database file...');
     fs.unlinkSync(testDbPath);
-    console.log('Test database cleaned up');
+    console.log('Test database file cleaned up');
   }
 }

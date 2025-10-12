@@ -121,6 +121,7 @@ const CourseDetailView: React.FC<CourseDetailViewProps> = ({ course, onEnroll })
                         />
                         <div className="p-6">
                             <Button
+                                data-testid="enroll-button"
                                 variant="primary"
                                 className="w-full text-lg py-3"
                                 disabled={!course}

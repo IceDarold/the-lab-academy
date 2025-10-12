@@ -146,4 +146,17 @@ async def get_current_admin(current_user: User = Depends(get_current_user)) -> U
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required",
         )
+async def get_current_admin(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+    return current_user
+
+
+def get_password_hash(password: str) -> str:
+    """Hash a password using the UserService method."""
+    from src.services.user_service import UserService
+    return UserService.hash_password(password)
     return current_user

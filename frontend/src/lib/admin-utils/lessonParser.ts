@@ -1,4 +1,4 @@
-import type { ParsedLesson, LessonCell, TextCell } from '../types';
+import type { ParsedLesson, LessonCell, TextCell } from '../../types/admin';
 
 // Naive YAML parser for simple key: value pairs, including multiline values indicated by `|`.
 const parseSimpleYaml = (yamlString: string): Record<string, any> => {

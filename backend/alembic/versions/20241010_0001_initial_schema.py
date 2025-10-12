@@ -44,7 +44,7 @@ def upgrade() -> None:
         sa.Column("hashed_password", sa.String(), nullable=False),
         sa.Column("role", user_role_enum, nullable=False, server_default="STUDENT"),
         sa.Column("status", user_status_enum, nullable=False, server_default="ACTIVE"),
-        sa.Column("registration_date", sa.DateTime(), server_default=sa.text("now()"), nullable=True),
+        sa.Column("registration_date", sa.DateTime(), server_default=sa.text("(datetime('now'))"), nullable=True),
     )
     op.create_index("ix_users_email", "users", ["email"], unique=True)
 
@@ -53,7 +53,7 @@ def upgrade() -> None:
         sa.Column("id", uuid_type, primary_key=True, nullable=False),
         sa.Column("user_id", uuid_type, nullable=False),
         sa.Column("course_slug", sa.String(length=100), nullable=False),
-        sa.Column("enrollment_date", sa.DateTime(), server_default=sa.text("now()"), nullable=True),
+        sa.Column("enrollment_date", sa.DateTime(), server_default=sa.text("(datetime('now'))"), nullable=True),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
     )
     op.create_index("ix_enrollments_course_slug", "enrollments", ["course_slug"], unique=False)
@@ -64,7 +64,7 @@ def upgrade() -> None:
         sa.Column("user_id", uuid_type, nullable=False),
         sa.Column("activity_type", activity_type_enum, nullable=False),
         sa.Column("details", sa.JSON(), nullable=True),
-        sa.Column("timestamp", sa.DateTime(), server_default=sa.text("now()"), nullable=True),
+        sa.Column("timestamp", sa.DateTime(), server_default=sa.text("(datetime('now'))"), nullable=True),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
     )
     op.create_index("ix_user_activity_logs_timestamp", "user_activity_logs", ["timestamp"], unique=False)
@@ -84,8 +84,8 @@ def upgrade() -> None:
     op.create_table(
         "profiles",
         sa.Column("id", uuid_type, primary_key=True, nullable=False),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=True),
-        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("now()"), nullable=True),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("(datetime('now'))"), nullable=True),
+        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(datetime('now'))"), nullable=True),
         sa.Column("email", sa.String(length=254), nullable=False),
         sa.Column("full_name", sa.String(), nullable=True),
         sa.Column("avatar_url", sa.String(), nullable=True),
@@ -103,8 +103,8 @@ def upgrade() -> None:
         sa.Column("ip_address", sa.String(), nullable=True),
         sa.Column("expires_at", sa.DateTime(), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=True),
-        sa.Column("last_used_at", sa.DateTime(), server_default=sa.text("now()"), nullable=True),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("(datetime('now'))"), nullable=True),
+        sa.Column("last_used_at", sa.DateTime(), server_default=sa.text("(datetime('now'))"), nullable=True),
         sa.ForeignKeyConstraint(["user_id"], ["profiles.id"], ondelete="CASCADE"),
         sa.UniqueConstraint("refresh_token_hash"),
     )

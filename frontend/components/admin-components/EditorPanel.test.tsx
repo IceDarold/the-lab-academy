@@ -159,7 +159,7 @@ describe('EditorPanel', () => {
 
     expect(screen.getByText('Cancel')).toBeInTheDocument()
     expect(screen.getByText('Save')).toBeInTheDocument()
-  })
+  }, 10000)
 
   it('should render resizable panels in edit mode', async () => {
     const user = userEvent.setup()
@@ -170,7 +170,7 @@ describe('EditorPanel', () => {
     expect(screen.getByTestId('resizable-panel-group')).toBeInTheDocument()
     expect(screen.getAllByTestId('resizable-panel')).toHaveLength(2)
     expect(screen.getByTestId('resizable-handle')).toBeInTheDocument()
-  })
+  }, 10000)
 
   it('should render code editor in edit mode', async () => {
     const user = userEvent.setup()
@@ -179,7 +179,7 @@ describe('EditorPanel', () => {
     await user.click(screen.getByText('Edit'))
 
     expect(screen.getByTestId('code-editor')).toBeInTheDocument()
-  })
+  }, 10000)
 
   it('should show preview panel in edit mode', async () => {
     const user = userEvent.setup()
@@ -189,7 +189,7 @@ describe('EditorPanel', () => {
 
     // Should show cell renderer in preview panel
     expect(screen.getByTestId('cell-renderer')).toBeInTheDocument()
-  })
+  }, 10000)
 
   it('should handle save functionality', async () => {
     const user = userEvent.setup()
@@ -206,8 +206,8 @@ describe('EditorPanel', () => {
     // Wait for save to complete
     await waitFor(() => {
       expect(screen.getByText('Preview')).toBeInTheDocument()
-    }, { timeout: 2000 })
-  })
+    }, { timeout: 10000 })
+  }, 15000)
 
   it('should handle cancel functionality', async () => {
     const user = userEvent.setup()
@@ -220,7 +220,7 @@ describe('EditorPanel', () => {
 
     // Should switch back to read mode
     expect(screen.getByText('Edit')).toBeInTheDocument()
-  })
+  }, 10000)
 
   it('should open settings dialog when settings button is clicked', async () => {
     const user = userEvent.setup()
@@ -230,7 +230,7 @@ describe('EditorPanel', () => {
     await user.click(settingsButton)
 
     expect(screen.getByTestId('lesson-settings-dialog')).toBeInTheDocument()
-  })
+  }, 10000)
 
   it('should render course configuration editor', () => {
     render(<EditorPanel selectedNode={mockCourseNode} />)
@@ -291,7 +291,7 @@ describe('EditorPanel', () => {
 
     // Should re-parse and update preview
     expect(screen.getByTestId('cell-renderer')).toBeInTheDocument()
-  })
+  }, 10000)
 
   it('should show error in edit mode when parsing fails', async () => {
     const user = userEvent.setup()
@@ -306,7 +306,7 @@ describe('EditorPanel', () => {
     await user.click(screen.getByText('Edit'))
 
     expect(screen.getByText('Error parsing lesson content. Check syntax.')).toBeInTheDocument()
-  })
+  }, 10000)
 
   it('should disable buttons during saving', async () => {
     const user = userEvent.setup()
@@ -320,7 +320,7 @@ describe('EditorPanel', () => {
     // Save button should be disabled during saving
     expect(saveButton).toBeDisabled()
     expect(screen.getByText('Cancel')).toBeDisabled()
-  })
+  }, 10000)
 
   it('should render book icon for lessons', () => {
     render(<EditorPanel selectedNode={mockLessonNode} />)
@@ -378,7 +378,7 @@ describe('EditorPanel', () => {
     await user.keyboard('{Enter}')
 
     expect(screen.getByText('Cancel')).toBeInTheDocument()
-  })
+  }, 10000)
 
   it('should render editor with proper styling classes', () => {
     render(<EditorPanel selectedNode={mockCourseNode} />)

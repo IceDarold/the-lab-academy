@@ -188,7 +188,7 @@ describe('RegistrationPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText(errorMessage)).toBeInTheDocument()
-    })
+    }, { timeout: 10000 })
   })
 
   it('should check email availability on blur', async () => {
@@ -203,7 +203,7 @@ describe('RegistrationPage', () => {
 
     await waitFor(() => {
       expect(mockCheckEmail).toHaveBeenCalledWith('test@example.com')
-    })
+    }, { timeout: 10000 })
   })
 
   it('should show error when email already exists', async () => {

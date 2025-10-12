@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Enum
+from sqlalchemy import Column, String, DateTime, Enum, text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
@@ -15,7 +15,7 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     role = Column(Enum('STUDENT', 'ADMIN', name='user_role_enum'), nullable=False, default='STUDENT')
     status = Column(Enum('ACTIVE', 'BLOCKED', name='user_status_enum'), nullable=False, default='ACTIVE')
-    registration_date = Column(DateTime, server_default=func.now())
+    registration_date = Column(DateTime, server_default=text("(datetime('now'))"))
 
     # Relationships
     enrollments = relationship("Enrollment", back_populates="user")

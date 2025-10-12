@@ -36,7 +36,7 @@ describe('Auth Service', () => {
 
       const result = await login('test@example.com', 'password123')
 
-      expect(mockApi.post).toHaveBeenCalledWith('/auth/login', expect.any(URLSearchParams), {
+      expect(mockApi.post).toHaveBeenCalledWith('/api/auth/login', expect.any(URLSearchParams), {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },

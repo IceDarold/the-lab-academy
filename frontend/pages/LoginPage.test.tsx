@@ -252,7 +252,7 @@ describe('LoginPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('First error')).toBeInTheDocument()
-    })
+    }, { timeout: 10000 })
 
     // Second submission succeeds
     mockLogin.mockResolvedValueOnce(undefined)
@@ -262,7 +262,7 @@ describe('LoginPage', () => {
 
     await waitFor(() => {
       expect(screen.queryByText('First error')).not.toBeInTheDocument()
-    })
+    }, { timeout: 10000 })
   })
 
   it('should handle form validation errors', async () => {

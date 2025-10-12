@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Enum, JSON
+from sqlalchemy import Column, DateTime, ForeignKey, Enum, JSON, text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
@@ -13,7 +13,7 @@ class UserActivityLog(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     activity_type = Column(Enum('LOGIN', 'LESSON_COMPLETED', 'QUIZ_ATTEMPT', 'CODE_EXECUTION', name='activity_type_enum'), nullable=False)
     details = Column(JSON, nullable=True)
-    timestamp = Column(DateTime, server_default=func.now(), index=True)
+    timestamp = Column(DateTime, server_default=text("(datetime('now'))"), index=True)
 
     # Relationships
     user = relationship("User", back_populates="activity_logs")

@@ -122,6 +122,11 @@ describe('QuizComponent', () => {
     const checkButton = screen.getByRole('button', { name: /check answer/i })
     await user.click(checkButton)
 
+    // Wait for the button text to change to "Checking…"
+    await waitFor(() => {
+      expect(screen.getByText('Checking…')).toBeInTheDocument()
+    })
+
     const checkingButton = screen.getByText('Checking…')
     expect(checkingButton.closest('button')).toBeDisabled()
   })
