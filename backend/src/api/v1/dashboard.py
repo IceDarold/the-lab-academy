@@ -26,16 +26,12 @@ async def _finalize(result):
 async def get_my_courses(current_user: User = Depends(get_current_user)) -> List[CourseWithProgress]:
     supabase = get_supabase_client()
     try:
-        response = await _finalize(
-            supabase.rpc(
-                "get_my_courses_with_progress",
-                {"user_id": str(current_user.user_id)},
-            )
-        )
-        data = getattr(response, "data", response) or []
-        return data
+        # For now, return empty list since courses table doesn't exist yet
+        # TODO: Implement proper courses functionality when database schema is ready
+        logger.info(f"User {current_user.user_id} requested courses - returning empty list (courses table not yet implemented)")
+        return []
     except Exception as exc:
-        logger.error(f"RPC call failed: {str(exc)}")
+        logger.error(f"Dashboard courses request failed: {str(exc)}")
         logger.error(f"Exception type: {type(exc)}")
         raise
 
