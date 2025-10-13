@@ -20,7 +20,7 @@ export const login = async (email: string, password: string): Promise<AuthTokens
   form.append('username', email);
   form.append('password', password);
 
-  const response = await api.post('/api/auth/login', form, {
+  const response = await api.post('/auth/login', form, {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
